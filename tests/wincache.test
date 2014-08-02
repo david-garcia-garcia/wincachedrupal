@@ -5,9 +5,7 @@
  * Tests for the WinCache module.
  */
 
-module_load_include('inc', 'WinCache', 'drupal_win_cache');
-
-class WinCacheTestCase extends DrupalWebTestCase  {
+class WinCacheDrupalTestCase extends DrupalWebTestCase  {
   protected $defaultbin = 'WinCache';
   protected $defaultcid = 'test_temporary';
   protected $defaultvalue = 'WinCacheTest';
@@ -27,7 +25,7 @@ class WinCacheTestCase extends DrupalWebTestCase  {
   /**
    * Set up the test.
    */
-  function setUp() {
+  public function setUp() {
     parent::setUp();
     $this->winCacheObj = new DrupalWinCache($this->defaultbin);
     $this->winCacheObj->set($this->defaultcid, $this->defaultvalue, CACHE_TEMPORARY);
@@ -41,12 +39,12 @@ class WinCacheTestCase extends DrupalWebTestCase  {
    * @param var $cid
    *   The cache id.
    */
-  function assertWinCacheRemoved($message, $cid = NULL) {
+  public function assertWinCacheRemoved($message, $cid = NULL) {
     if ($cid == NULL) {
       $cid = $this->defaultcid;
     }
-    $WinCache = $this->winCacheObj->get($cid);
-    $this->assertFalse($WinCache, $message);
+    $wincache = $this->winCacheObj->get($cid);
+    $this->assertFalse($wincache, $message);
   }
 
   /**
@@ -68,8 +66,8 @@ class WinCacheTestCase extends DrupalWebTestCase  {
    *   TRUE on pass, FALSE on fail.
    */
   protected function checkWinCacheExists($cid, $var) {
-    $WinCache = $this->winCacheObj->get($cid);
-    return isset($WinCache->data) && $WinCache->data == $var;
+    $wincache = $this->winCacheObj->get($cid);
+    return isset($wincache->data) && $wincache->data == $var;
   }
 
   /**
@@ -89,9 +87,9 @@ class WinCacheTestCase extends DrupalWebTestCase  {
   /**
    *  Assert WinCache instance is enabled or not.
    */
-  function assertWinCacheInstance() {
-    $WinCacheEnabled = (function_exists('WinCache_ucache_info') && ($cache = @WinCache_ucache_info()));
-    $this->assertTrue($WinCacheEnabled, t('WinCache is enabled.'));
+  public function assertWinCacheInstance() {
+    $wincacheenabled = (function_exists('WinCache_ucache_info') && ($cache = @WinCache_ucache_info()));
+    $this->assertTrue($wincacheenabled, t('WinCache is enabled.'));
   }
 
   /**
@@ -108,7 +106,7 @@ class WinCacheTestCase extends DrupalWebTestCase  {
 }
 
 
-class WinCacheSavingCase extends WinCacheTestCase {
+class WinCacheDrupalSavingCase extends WinCacheDrupalTestCase {
 
   /**
    * Get information about the test case.
@@ -124,28 +122,28 @@ class WinCacheSavingCase extends WinCacheTestCase {
   /**
    * Test the saving and restoring of a string.
    */
-  function testString() {
+  public function testString() {
     $this->checkVariable($this->randomName(100));
   }
 
   /**
    * Test the saving and restoring of an integer.
    */
-  function testInteger() {
+  public function testInteger() {
     $this->checkVariable(100);
   }
 
   /**
    * Test the saving and restoring of a double.
    */
-  function testDouble() {
+  public function testDouble() {
     $this->checkVariable(1.29);
   }
 
   /**
    * Test the saving and restoring of an array.
    */
-  function testArray() {
+  public function testArray() {
     $this->checkVariable(
       array(
         'drupal1' => '', 'drupal2' => 'drupal3',
@@ -157,7 +155,7 @@ class WinCacheSavingCase extends WinCacheTestCase {
   /**
    * Test the saving and restoring of an object.
    */
-  function testObject() {
+  public function testObject() {
     $test_object = new stdClass();
     $test_object->test1 = $this->randomName(100);
     $test_object->test2 = 100;
@@ -167,18 +165,18 @@ class WinCacheSavingCase extends WinCacheTestCase {
     );
 
     $this->winCacheObj->set('test_object', $test_object, CACHE_TEMPORARY);
-    $WinCache = $this->winCacheObj->get('test_object');
-    $this->assertTrue(isset($WinCache->data) && $WinCache->data == $test_object, t('Object is saved and restored properly.'));
+    $wincache = $this->winCacheObj->get('test_object');
+    $this->assertTrue(isset($wincache->data) && $wincache->data == $test_object, t('Object is saved and restored properly.'));
   }
 
   /**
    * Check or a variable is stored and restored properly.
    */
-  function checkVariable($var) {
+  public function checkVariable($var) {
     $this->winCacheObj->set('test_var', $var, CACHE_TEMPORARY);
-    $WinCache = $this->winCacheObj->get('test_var');
+    $wincache = $this->winCacheObj->get('test_var');
     $this->assertTrue(
-      isset($WinCache->data) && $WinCache->data === $var,
+      isset($wincache->data) && $wincache->data === $var,
       t('@type is saved and restored properly.',
       array('@type' => drupal_ucfirst(gettype($var))))
     );
@@ -189,7 +187,7 @@ class WinCacheSavingCase extends WinCacheTestCase {
 /**
  * Test cache_get_multiple().
  */
-class WinCacheGetMultipleUnitTest extends WinCacheTestCase {
+class WinCacheDrupalGetMultipleUnitTest extends WinCacheDrupalTestCase {
 
   /**
    * Get information about the test case.
@@ -205,7 +203,7 @@ class WinCacheGetMultipleUnitTest extends WinCacheTestCase {
   /**
    * Set up the test.
    */
-  function setUp() {
+  public function setUp() {
     $this->defaultbin = 'cache_page';
     parent::setUp();
     $this->winCacheObj = new DrupalWinCache($this->defaultbin);
@@ -214,7 +212,7 @@ class WinCacheGetMultipleUnitTest extends WinCacheTestCase {
   /**
    * Test cache_get_multiple().
    */
-  function testCacheMultiple() {
+  public function testCacheMultiple() {
     $item1 = $this->randomName(10);
     $item2 = $this->randomName(10);
     $this->winCacheObj->set('item1', $item1);
@@ -244,7 +242,7 @@ class WinCacheGetMultipleUnitTest extends WinCacheTestCase {
 /**
  * Test WinCache clearing methods.
  */
-class WinCacheClearCase extends WinCacheTestCase {
+class WinCacheDrupalClearCase extends WinCacheDrupalTestCase {
 
   /**
    * Get information about the test case.
@@ -260,7 +258,7 @@ class WinCacheClearCase extends WinCacheTestCase {
   /**
    * Set up the test.
    */
-  function setUp() {
+  public function setUp() {
     $this->defaultbin = 'WinCache_page';
     $this->defaultvalue = $this->randomName(10);
     parent::setUp();
@@ -270,7 +268,7 @@ class WinCacheClearCase extends WinCacheTestCase {
   /**
    * Test clearing using a cid.
    */
-  function testClearCid() {
+  public function testClearCid() {
     $this->winCacheObj->set('test_cid_clear', $this->defaultvalue, CACHE_TEMPORARY);
 
     $this->assertWinCacheExists(t('Cache was set for clearing cid.'), $this->defaultvalue, 'test_cid_clear');
@@ -288,7 +286,7 @@ class WinCacheClearCase extends WinCacheTestCase {
   /**
    * Test clearing using wildcard.
    */
-  function testClearWildcard() {
+  public function testClearWildcard() {
     $this->winCacheObj->set('test_cid_clear1', $this->defaultvalue, CACHE_TEMPORARY);
     $this->winCacheObj->set('test_cid_clear2', $this->defaultvalue, CACHE_TEMPORARY);
     $this->assertTrue($this->checkWinCacheExists('test_cid_clear1', $this->defaultvalue)
@@ -314,7 +312,7 @@ class WinCacheClearCase extends WinCacheTestCase {
   /**
    * Test clearing using an array.
    */
-  function testClearArray() {
+  public function testClearArray() {
     // Create three cache entries.
     $this->winCacheObj->set('test_cid_clear1', $this->defaultvalue, CACHE_TEMPORARY);
     $this->winCacheObj->set('test_cid_clear2', $this->defaultvalue, CACHE_TEMPORARY);
@@ -354,7 +352,7 @@ class WinCacheClearCase extends WinCacheTestCase {
 /**
  * Test WinCache_is_empty() function.
  */
-class WinCacheIsEmptyCase extends WinCacheTestCase {
+class WinCacheDrupalIsEmptyCase extends WinCacheDrupalTestCase {
   /**
    * Gets the test info.
    */
@@ -369,7 +367,7 @@ class WinCacheIsEmptyCase extends WinCacheTestCase {
   /**
    * Set up the test.
    */
-  function setUp() {
+  public function setUp() {
     $this->defaultbin = 'cache_page';
     $this->defaultvalue = $this->randomName(10);
 
@@ -383,7 +381,7 @@ class WinCacheIsEmptyCase extends WinCacheTestCase {
   /**
    * Test clearing using a cid.
    */
-  function testIsEmpty() {
+  public function testIsEmpty() {
     // Clear the cache bin.
     $this->winCacheObj->clear('*', TRUE);
     $this->assertTrue($this->winCacheObj->isEmpty(), t('The cache bin is empty'));
@@ -392,7 +390,7 @@ class WinCacheIsEmptyCase extends WinCacheTestCase {
     $this->assertWinCacheExists(t('Cache was set.'), $this->defaultvalue, $this->defaultcid);
     $this->assertTrue($this->checkWinCacheExists($this->defaultcid, $this->defaultvalue), t('The cache bin is not empty'));
     // Remove the cached data.
-     $this->winCacheObj->clear($this->defaultcid);
+    $this->winCacheObj->clear($this->defaultcid);
     $this->assertWinCacheRemoved(t('Cache was removed.'), $this->defaultcid);
     $this->assertFalse($this->checkWinCacheExists($this->defaultcid, $this->defaultvalue), t('The cache bin is empty'));
   }

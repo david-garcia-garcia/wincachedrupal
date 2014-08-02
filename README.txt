@@ -75,6 +75,10 @@
  ; Make sure the folder exists and that the identity of you PHP process
  ; has read/write permissions.
  session.save_path = "C:\Program Files (x86)\PHP\php5_5_sessions\"
+
+ ;Session data is not persisted by Wincache session handler if your appPool name has periods.
+ ;If your app-pool name has periods (.) in it, change them to underscores (_). 
+ ;So an app-pool named www.somesite.com should be renamed to www_somesite_com.
  
  To make sure these settings are working, check you extension settings in phpinfo()
  and access the Wincache statistics page, on you first run you will need to customize
@@ -221,10 +225,11 @@
  Along with the Wincache backend this package contains a Drupal module.
  This module has some tests to make sure that Wincache is properly running
  and also provides some UI statistics.
- 
- The module does 2 things:
- 
+
+ The module does 3 things:
+
  - Adds information message to the status page.
  - Shows Wincache usage statistics when user has appropiate permissions
-   and wincache_show_debug is set to true (in settings.php):
-   $conf['wincache_show_debug'] = TRUE;
+ and wincache_show_debug is set to true (in settings.php):
+ $conf['wincache_show_debug'] = TRUE;
+ - Provide a set of tests.

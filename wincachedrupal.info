@@ -1,4 +1,7 @@
 name = WinCacheDrupal
-description = Wincache Cache Backend UI and Statistics
+description = Wincache Cache Backend UI and Statistics.
 package = Caching
 core = 7.x
+
+; Files that contain classes:
+files[] = tests/wincache.test
