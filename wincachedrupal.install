@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for Cache module.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function wincachedrupal_requirements($phase) {
+  $requirements = array();
+  // Ensure translations don't break at install time.
+  $t = get_t();
+
+  // Test WinCache.
+  $wincache_enabled = (function_exists('wincache_ucache_info') && ($cache = @wincache_ucache_info()));
+
+  $requirements['wincache'] = array(
+    'title' => $t('WinCache version:'),
+    'value' => $wincache_enabled ? phpversion('wincache') : $t('Not available'),
+    'severity' => $wincache_enabled ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+  );
+
+  if ($wincache_enabled) {
+    $requirements['wincache']['description'] = $t('WinCache has been running for !duration. Currently caching !num_entries entries.',
+      array(
+        '!duration' => format_interval($cache['total_cache_uptime']),
+        '!num_entries' => $cache['total_item_count'],
+      )
+    );
+  }
+  else {
+    $requirements['wincache']['description'] = $t('The wincachedrupal module needs the wincache extension see: !link.', array('!link' => l('http://php.net/manual/en/book.wincache.php', '')));
+  }
+
+  return $requirements;
+}

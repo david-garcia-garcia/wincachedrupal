@@ -1,0 +1,4 @@
+name = WinCacheDrupal
+description = Wincache Cache Backend UI and Statistics
+package = Caching
+core = 7.x

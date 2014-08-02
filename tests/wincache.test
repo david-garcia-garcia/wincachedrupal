@@ -1,0 +1,399 @@
+<?php
+
+/**
+ * @file
+ * Tests for the WinCache module.
+ */
+
+module_load_include('inc', 'WinCache', 'drupal_win_cache');
+
+class WinCacheTestCase extends DrupalWebTestCase  {
+  protected $defaultbin = 'WinCache';
+  protected $defaultcid = 'test_temporary';
+  protected $defaultvalue = 'WinCacheTest';
+  public $winCacheObj = '';
+
+  /**
+   * Get information about the test case.
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'WinCache Test',
+      'description' => 'Check our variables are saved,restored and cleared in the right way.',
+      'group' => 'WinCache',
+    );
+  }
+
+  /**
+   * Set up the test.
+   */
+  function setUp() {
+    parent::setUp();
+    $this->winCacheObj = new DrupalWinCache($this->defaultbin);
+    $this->winCacheObj->set($this->defaultcid, $this->defaultvalue, CACHE_TEMPORARY);
+  }
+
+  /**
+   * Assert or a cache entry has been removed.
+   *
+   * @param string $message
+   *   Message to display.
+   * @param var $cid
+   *   The cache id.
+   */
+  function assertWinCacheRemoved($message, $cid = NULL) {
+    if ($cid == NULL) {
+      $cid = $this->defaultcid;
+    }
+    $WinCache = $this->winCacheObj->get($cid);
+    $this->assertFalse($WinCache, $message);
+  }
+
+  /**
+   * Perform the general wipe.
+   */
+  protected function generalWipe() {
+    $this->winCacheObj->clear();
+  }
+
+  /**
+   * Check whether or not a WinCache entry exists.
+   *
+   * @param var $cid
+   *   The WinCache id.
+   * @param var $var
+   *   The variable the cache should contain.
+   *
+   * @return boolean
+   *   TRUE on pass, FALSE on fail.
+   */
+  protected function checkWinCacheExists($cid, $var) {
+    $WinCache = $this->winCacheObj->get($cid);
+    return isset($WinCache->data) && $WinCache->data == $var;
+  }
+
+  /**
+   * Assert or a WinCache entry exists.
+   *
+   * @param string $message
+   *   Message to display.
+   * @param var $var
+   *   The variable the WinCache should contain.
+   * @param var $cid
+   *   The cache id.
+   */
+  protected function assertWinCacheExists($message, $var = NULL, $cid = NULL) {
+    $this->assertTrue($this->checkWinCacheExists($cid, $var), $message);
+  }
+
+  /**
+   *  Assert WinCache instance is enabled or not.
+   */
+  function assertWinCacheInstance() {
+    $WinCacheEnabled = (function_exists('WinCache_ucache_info') && ($cache = @WinCache_ucache_info()));
+    $this->assertTrue($WinCacheEnabled, t('WinCache is enabled.'));
+  }
+
+  /**
+   * Setup the lifetime settings for caching.
+   *
+   * @param var $time
+   *   The time in seconds the cache should minimal live.
+   */
+  protected function setupLifetime($time = 30) {
+    variable_set('cache_lifetime', $time);
+    variable_set('cache_flush_', 0);
+  }
+
+}
+
+
+class WinCacheSavingCase extends WinCacheTestCase {
+
+  /**
+   * Get information about the test case.
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'WinCache saving test',
+      'description' => 'Check our variables are saved and restored the right way.',
+      'group' => 'WinCache',
+    );
+  }
+
+  /**
+   * Test the saving and restoring of a string.
+   */
+  function testString() {
+    $this->checkVariable($this->randomName(100));
+  }
+
+  /**
+   * Test the saving and restoring of an integer.
+   */
+  function testInteger() {
+    $this->checkVariable(100);
+  }
+
+  /**
+   * Test the saving and restoring of a double.
+   */
+  function testDouble() {
+    $this->checkVariable(1.29);
+  }
+
+  /**
+   * Test the saving and restoring of an array.
+   */
+  function testArray() {
+    $this->checkVariable(
+      array(
+        'drupal1' => '', 'drupal2' => 'drupal3',
+        'drupal4' => array('drupal5', 'drupal6'),
+      )
+    );
+  }
+
+  /**
+   * Test the saving and restoring of an object.
+   */
+  function testObject() {
+    $test_object = new stdClass();
+    $test_object->test1 = $this->randomName(100);
+    $test_object->test2 = 100;
+    $test_object->test3 = array(
+      'drupal1' => '', 'drupal2' => 'drupal3',
+      'drupal4' => array('drupal5', 'drupal6'),
+    );
+
+    $this->winCacheObj->set('test_object', $test_object, CACHE_TEMPORARY);
+    $WinCache = $this->winCacheObj->get('test_object');
+    $this->assertTrue(isset($WinCache->data) && $WinCache->data == $test_object, t('Object is saved and restored properly.'));
+  }
+
+  /**
+   * Check or a variable is stored and restored properly.
+   */
+  function checkVariable($var) {
+    $this->winCacheObj->set('test_var', $var, CACHE_TEMPORARY);
+    $WinCache = $this->winCacheObj->get('test_var');
+    $this->assertTrue(
+      isset($WinCache->data) && $WinCache->data === $var,
+      t('@type is saved and restored properly.',
+      array('@type' => drupal_ucfirst(gettype($var))))
+    );
+  }
+}
+
+
+/**
+ * Test cache_get_multiple().
+ */
+class WinCacheGetMultipleUnitTest extends WinCacheTestCase {
+
+  /**
+   * Get information about the test case.
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Fetching multiple WinCache items',
+      'description' => 'Confirm that multiple records are fetched correctly.',
+      'group' => 'WinCache',
+    );
+  }
+
+  /**
+   * Set up the test.
+   */
+  function setUp() {
+    $this->defaultbin = 'cache_page';
+    parent::setUp();
+    $this->winCacheObj = new DrupalWinCache($this->defaultbin);
+  }
+
+  /**
+   * Test cache_get_multiple().
+   */
+  function testCacheMultiple() {
+    $item1 = $this->randomName(10);
+    $item2 = $this->randomName(10);
+    $this->winCacheObj->set('item1', $item1);
+    $this->winCacheObj->set('item2', $item2);
+    $this->assertTrue($this->checkWinCacheExists('item1', $item1), t('Item 1 is cached.'));
+    $this->assertTrue($this->checkWinCacheExists('item2', $item2), t('Item 2 is cached.'));
+
+    // Fetch both records from the database with cache_get_multiple().
+    $item_ids = array('item1', 'item2');
+    $items = $this->winCacheObj->getMultiple($item_ids);
+    $this->assertEqual($items['item1']->data, $item1, t('Item was returned from cache successfully.'));
+    $this->assertEqual($items['item2']->data, $item2, t('Item was returned from cache successfully.'));
+
+    // Remove one item from the cache.
+    $this->winCacheObj->clear('item2');
+
+    // Confirm that only one item is returned by cache_get_multiple().
+    $item_ids = array('item1', 'item2');
+    $items = $this->winCacheObj->getMultiple($item_ids);
+    $this->assertEqual($items['item1']->data, $item1, t('Item was returned from cache successfully.'));
+    $this->assertFalse(isset($items['item2']), t('Item was not returned from the cache.'));
+    $this->assertTrue(count($items) == 1, t('Only valid cache entries returned.'));
+  }
+}
+
+
+/**
+ * Test WinCache clearing methods.
+ */
+class WinCacheClearCase extends WinCacheTestCase {
+
+  /**
+   * Get information about the test case.
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'WinCache clear test',
+      'description' => 'Check our clearing is done the proper way.',
+      'group' => 'WinCache',
+    );
+  }
+
+  /**
+   * Set up the test.
+   */
+  function setUp() {
+    $this->defaultbin = 'WinCache_page';
+    $this->defaultvalue = $this->randomName(10);
+    parent::setUp();
+    $this->winCacheObj = new DrupalWinCache($this->defaultbin);
+  }
+
+  /**
+   * Test clearing using a cid.
+   */
+  function testClearCid() {
+    $this->winCacheObj->set('test_cid_clear', $this->defaultvalue, CACHE_TEMPORARY);
+
+    $this->assertWinCacheExists(t('Cache was set for clearing cid.'), $this->defaultvalue, 'test_cid_clear');
+    $this->winCacheObj->clear('test_cid_clear');
+
+    $this->assertWinCacheRemoved(t('WinCache was removed after clearing cid.'), 'test_cid_clear');
+
+    $this->winCacheObj->set('test_cid_clear1', $this->defaultvalue, CACHE_TEMPORARY);
+    $this->winCacheObj->set('test_cid_clear2', $this->defaultvalue, CACHE_TEMPORARY);
+    $this->assertTrue($this->checkWinCacheExists('test_cid_clear1', $this->defaultvalue)
+                      && $this->checkWinCacheExists('test_cid_clear2', $this->defaultvalue),
+                      t('Two caches were created for checking cid "*" with wildcard false.'));
+  }
+
+  /**
+   * Test clearing using wildcard.
+   */
+  function testClearWildcard() {
+    $this->winCacheObj->set('test_cid_clear1', $this->defaultvalue, CACHE_TEMPORARY);
+    $this->winCacheObj->set('test_cid_clear2', $this->defaultvalue, CACHE_TEMPORARY);
+    $this->assertTrue($this->checkWinCacheExists('test_cid_clear1', $this->defaultvalue)
+                      && $this->checkWinCacheExists('test_cid_clear2', $this->defaultvalue),
+                      t('Two caches were created for checking cid "*" with wildcard true.'));
+    $this->winCacheObj->clear('*', TRUE);
+    $this->assertFalse($this->checkWinCacheExists('test_cid_clear1', $this->defaultvalue)
+                      || $this->checkWinCacheExists('test_cid_clear2', $this->defaultvalue),
+                      t('Two caches removed after clearing cid "*" with wildcard true.'));
+
+    $this->winCacheObj->set('test_cid_clear1', $this->defaultvalue, CACHE_TEMPORARY);
+    $this->winCacheObj->set('test_cid_clear2', $this->defaultvalue, CACHE_TEMPORARY);
+    $this->assertTrue($this->checkWinCacheExists('test_cid_clear1', $this->defaultvalue)
+                      && $this->checkWinCacheExists('test_cid_clear2', $this->defaultvalue),
+                      t('Two caches were created for checking cid substring with wildcard true.'));
+    $this->winCacheObj->clear('test_cid_clear1');
+    $this->winCacheObj->clear('test_cid_clear2');
+    $this->assertFalse($this->checkWinCacheExists('test_cid_clear1', $this->defaultvalue)
+                      || $this->checkWinCacheExists('test_cid_clear2', $this->defaultvalue),
+                      t('Two caches removed after clearing cid substring with wildcard true.'));
+  }
+
+  /**
+   * Test clearing using an array.
+   */
+  function testClearArray() {
+    // Create three cache entries.
+    $this->winCacheObj->set('test_cid_clear1', $this->defaultvalue, CACHE_TEMPORARY);
+    $this->winCacheObj->set('test_cid_clear2', $this->defaultvalue, CACHE_TEMPORARY);
+    $this->winCacheObj->set('test_cid_clear3', $this->defaultvalue, CACHE_TEMPORARY);
+    $this->assertTrue($this->checkWinCacheExists('test_cid_clear1', $this->defaultvalue)
+                      && $this->checkWinCacheExists('test_cid_clear2', $this->defaultvalue)
+                      && $this->checkWinCacheExists('test_cid_clear3', $this->defaultvalue),
+                      t('Three cache entries were created.'));
+
+    // Clear two entries using an array.
+    $this->winCacheObj->clear(array('test_cid_clear1', 'test_cid_clear2'));
+    $this->assertFalse($this->checkWinCacheExists('test_cid_clear1', $this->defaultvalue)
+                       || $this->checkWinCacheExists('test_cid_clear2', $this->defaultvalue),
+                       t('Two cache entries removed after clearing with an array.'));
+
+    $this->assertTrue($this->checkWinCacheExists('test_cid_clear3', $this->defaultvalue),
+                      t('Entry was not cleared from the cache'));
+
+    // Set the cache clear threshold to 2 to confirm that the full bin is
+    // cleared when the threshold is exceeded.
+    variable_set('cache_clear_threshold', 2);
+    $this->winCacheObj->set('test_cid_clear1', $this->defaultvalue, CACHE_TEMPORARY);
+    $this->winCacheObj->set('test_cid_clear2', $this->defaultvalue, CACHE_TEMPORARY);
+    $this->assertTrue($this->checkWinCacheExists('test_cid_clear1', $this->defaultvalue)
+                      && $this->checkWinCacheExists('test_cid_clear2', $this->defaultvalue),
+                      t('Two cache entries were created.'));
+    $this->winCacheObj->clear(
+      array('test_cid_clear1', 'test_cid_clear2', 'test_cid_clear3')
+    );
+    $this->assertFalse($this->checkWinCacheExists('test_cid_clear1', $this->defaultvalue)
+                       || $this->checkWinCacheExists('test_cid_clear2', $this->defaultvalue)
+                       || $this->checkWinCacheExists('test_cid_clear3', $this->defaultvalue),
+                       t('All cache entries removed when the array exceeded the cache clear threshold.'));
+  }
+}
+
+/**
+ * Test WinCache_is_empty() function.
+ */
+class WinCacheIsEmptyCase extends WinCacheTestCase {
+  /**
+   * Gets the test info.
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'WinCache emptiness test',
+      'description' => 'Check if a WinCache bin is empty after performing clear operations.',
+      'group' => 'WinCache',
+    );
+  }
+
+  /**
+   * Set up the test.
+   */
+  function setUp() {
+    $this->defaultbin = 'cache_page';
+    $this->defaultvalue = $this->randomName(10);
+
+    parent::setUp();
+    $this->setupLifetime(30);
+
+    $this->winCacheObj = new DrupalWinCache($this->defaultbin);
+    $this->winCacheObj->set($this->defaultcid, $this->defaultvalue, CACHE_TEMPORARY);
+  }
+
+  /**
+   * Test clearing using a cid.
+   */
+  function testIsEmpty() {
+    // Clear the cache bin.
+    $this->winCacheObj->clear('*', TRUE);
+    $this->assertTrue($this->winCacheObj->isEmpty(), t('The cache bin is empty'));
+    // Add some data to the cache bin.
+    $this->winCacheObj->set($this->defaultcid, $this->defaultvalue, CACHE_TEMPORARY);
+    $this->assertWinCacheExists(t('Cache was set.'), $this->defaultvalue, $this->defaultcid);
+    $this->assertTrue($this->checkWinCacheExists($this->defaultcid, $this->defaultvalue), t('The cache bin is not empty'));
+    // Remove the cached data.
+     $this->winCacheObj->clear($this->defaultcid);
+    $this->assertWinCacheRemoved(t('Cache was removed.'), $this->defaultcid);
+    $this->assertFalse($this->checkWinCacheExists($this->defaultcid, $this->defaultvalue), t('The cache bin is empty'));
+  }
+}
