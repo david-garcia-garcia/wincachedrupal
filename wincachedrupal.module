@@ -6,11 +6,11 @@
  */
 
 /**
- * Implements hook_init().
+ * Implements hook_page_alter().
  *
  * Used for displaying the WinCache stats for debug purposes.
  */
-function wincachedrupal_init() {
+function wincachedrupal_page_alter(&$page) {
   global $user;
 
   if (($user->uid == 0) || !variable_get('wincache_show_debug', FALSE)
