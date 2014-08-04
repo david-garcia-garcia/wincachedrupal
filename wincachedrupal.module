@@ -2,23 +2,26 @@
 
 /**
  * @file
- * Installation file for the drupal-wincache module.
+ * Installation file for the WinCacheDrupal module.
  */
 
 /**
- * Implements hook_page_alter().
+ * Implements hook_init().
  *
  * Used for displaying the WinCache stats for debug purposes.
  */
-function wincachedrupal_page_alter(&$page) {
+function wincachedrupal_init(&$page) {
   global $user;
-
+  global $wincache_collect_statistics;
+  $wincache_collect_statistics = false;
+  
   if (($user->uid == 0) || !variable_get('wincache_show_debug', FALSE)
       || !user_access('access wincache statistics') || strstr($_SERVER['PHP_SELF'], 'update.php')
       || strstr($_GET['q'], 'autocomplete')) {
     return;
   }
 
+  $wincache_collect_statistics = true;
   register_shutdown_function('wincachedrupal_shutdown');
 }
 
@@ -61,6 +64,8 @@ function wincachedrupal_permission() {
 }
 
 /**
+ * Shutdown function to render statistics.
+ *
  * See wincache_init() which registers this function as a shutdown function.
  * Displays apc stats in the footer.
  */

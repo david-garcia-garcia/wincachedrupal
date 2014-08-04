@@ -26,14 +26,14 @@
  * this software without specific prior written permission.
  * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, 
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR 
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, 
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
  * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
@@ -49,7 +49,8 @@
 /**
  * Configuration settings.
  *
- * If you do not want to use authentication for this page, set USE_AUTHENTICATION to 0.
+ * If you do not want to use authentication for this page,
+ * set USE_AUTHENTICATION to 0.
  * If you use authentication then replace the default password.
  */
 define('USE_AUTHENTICATION', 1);
@@ -59,9 +60,10 @@ define('PASSWORD', 'wincache');
 /**
  * Authentication.
  *
- * The Basic PHP authentication will work only when IIS is configured to support 
- * Anonymous Authentication' and nothing else. If IIS is configured to support/use
- * any other kind of authentication like Basic/Negotiate/Digest etc, this will not work.
+ * The Basic PHP authentication will work only when IIS is
+ * configured to support Anonymous Authentication' and nothing else.
+ * If IIS is configured to support/use any other kind of authentication
+ * like Basic/Negotiate/Digest etc, this will not work.
  * In that case use the array below to define the names of users in your 
  * domain/network/workgroup which you want to grant access to.
  */
@@ -276,7 +278,7 @@ function get_trimmed_ini_value($input, $max_len, $separators = array('|', ',')) 
     if (!is_array($separators)) die('The separators must be in an array');
     foreach ($separators as $separator) {
       $index = strripos($result, $separator);
-      if ($index !== false  && $index > $lastindex) {
+      if ($index !== FALSE  && $index > $lastindex) {
         $lastindex = $index;
       }
     }

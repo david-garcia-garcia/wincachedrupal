@@ -33,8 +33,15 @@ class DrupalWinCache implements DrupalCacheInterface {
   /**
    * Manage statistics.
    */
-  protected function AddStatistic($method, $keys, $wildcard = NULL){
-    $GLOBALS['wincache_statistics'][] = array($method, $this->bin, $keys, $wildcard);
+  protected function AddStatistic($method, $keys, $wildcard = NULL) {
+    global $wincache_collect_statistics;
+    // $wincache_collect_statistics is set during hook_init in
+    // WincacheDrupal module.
+    // We might be collecting statistics prior to hook_init in all requests
+    // but that is the only way to get them.
+    if (!($wincache_collect_statistics == FALSE)) {
+      $GLOBALS['wincache_statistics'][] = array($method, $this->bin, $keys, $wildcard);
+    }
   }
   
   /**
@@ -269,9 +276,6 @@ class DrupalWinCache implements DrupalCacheInterface {
    *   The key of the data to be removed.
    * @param var $wildcard
    *   The wildcard.
-   *
-   * @return bool
-   *   TRUE if successfully cleared FALSE otherwise.
    */
   public function clear($cid = NULL, $wildcard = FALSE) {
     global $user;
