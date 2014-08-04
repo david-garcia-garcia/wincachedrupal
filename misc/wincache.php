@@ -105,6 +105,22 @@ if (USE_AUTHENTICATION == 1 && !(BYPASS_SECURITY_CHECK === TRUE)) {
   }
 }
 
+// Global variables.
+global  $ocache_mem_info, 
+$ocache_file_info,
+$ocache_summary_info,
+$fcache_mem_info,
+$fcache_file_info,
+$fcache_summary_info,
+$rpcache_mem_info,
+$rpcache_file_info,
+$ucache_mem_info,
+$ucache_info,
+$scache_mem_info,
+$scache_info,
+$user_cache_available,
+$session_cache_available;
+
 define('IMG_WIDTH', 320);
 define('IMG_HEIGHT', 220);
 define('SUMMARY_DATA', 1);
@@ -625,21 +641,6 @@ function cache_scope_text($is_local)
 {
   return ($is_local == true) ? 'local' : 'global';
 }
-
-global  $ocache_mem_info, 
-$ocache_file_info,
-$ocache_summary_info,
-$fcache_mem_info,
-$fcache_file_info,
-$fcache_summary_info,
-$rpcache_mem_info,
-$rpcache_file_info,
-$ucache_mem_info,
-$ucache_info,
-$scache_mem_info,
-$scache_info,
-$user_cache_available,
-$session_cache_available;
 
 function init_cache_info($cache_data = SUMMARY_DATA)
 {
