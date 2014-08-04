@@ -27,7 +27,7 @@ function wincachedrupal_page_alter(&$page) {
  */
 function wincachedrupal_permission() {
   return array(
-    'access wincache statistics' =>  array(
+    'access wincache statistics' => array(
       'title' => t('Access wincache statistics'),
       'description' => t('Allows access to the statistics reports of WinCache.'),
     ),

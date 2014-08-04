@@ -12,7 +12,9 @@ $wincache_statistics = array();
  *
  * This is Drupal's win cache implementation. It uses Wincache
  * to store cached data. Each cache bin corresponds to a prefix of
- * the wincache variables with the same name.
+ * the wincache variables with the same name. The name of this class
+ * is DrupalWinCache instead of WinCacheDrupal for historical reasons
+ * and backwards compatibility.
  */
 class DrupalWinCache implements DrupalCacheInterface {
   protected $bin;
@@ -23,7 +25,7 @@ class DrupalWinCache implements DrupalCacheInterface {
    * @param var $bin
    *   The bin parameter.
    */
-  function __construct($bin) {
+  public function __construct($bin) {
     $this->bin = $bin;
   }
 
@@ -67,7 +69,7 @@ class DrupalWinCache implements DrupalCacheInterface {
    * @return var
    *   The cached item.
    */
-  function get($cid) {
+  public function get($cid) {
     // Garbage collection necessary when enforcing a minimum cache lifetime.
     $this->garbageCollection($this->bin);
 
@@ -137,7 +139,7 @@ class DrupalWinCache implements DrupalCacheInterface {
    * @return array
    *   The array of cached items.
    */
-  function getMultiple(&$cids) {
+  public function getMultiple(&$cids) {
     // Garbage collection necessary when enforcing a minimum cache lifetime.
     $this->garbageCollection($this->bin);
 
@@ -189,7 +191,7 @@ class DrupalWinCache implements DrupalCacheInterface {
    * @param array $headers
    *   The headers.
    */
-  function set($cid, $data, $expire = CACHE_PERMANENT, array $headers = NULL) {
+  public function set($cid, $data, $expire = CACHE_PERMANENT, array $headers = NULL) {
     // Add set to statistics.
     $GLOBALS['wincache_statistics'][] = array('set', $this->bin, $cid);
 
@@ -241,7 +243,7 @@ class DrupalWinCache implements DrupalCacheInterface {
   /**
    * clear cached item in temporary cached mode.
    */
-  function clearTemporary() {
+  public function clearTemporary() {
     $data = wincache_ucache_info();
     $count = count($data['ucache_entries']);
     for ($i = 1; $i <= $count; $i++) {
@@ -266,7 +268,7 @@ class DrupalWinCache implements DrupalCacheInterface {
    * @return boolean
    *   TRUE if successfully cleared FALSE otherwise.
    */
-  function clear($cid = NULL, $wildcard = FALSE) {
+  public function clear($cid = NULL, $wildcard = FALSE) {
     global $user;
 
     // Add a get to our statistics.
@@ -334,7 +336,7 @@ class DrupalWinCache implements DrupalCacheInterface {
    * @return boolean
    *   TRUE if empty FALSE otherwise.
    */
-  function isEmpty() {
+  public function isEmpty() {
     $data = wincache_ucache_info();
     $count = count($data['ucache_entries']);
     for ($i = 1; $i <= $count; $i++) {

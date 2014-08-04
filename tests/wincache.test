@@ -62,7 +62,7 @@ class WinCacheDrupalTestCase extends DrupalWebTestCase  {
    * @param var $var
    *   The variable the cache should contain.
    *
-   * @return boolean
+   * @return bool
    *   TRUE on pass, FALSE on fail.
    */
   protected function checkWinCacheExists($cid, $var) {
@@ -85,7 +85,7 @@ class WinCacheDrupalTestCase extends DrupalWebTestCase  {
   }
 
   /**
-   *  Assert WinCache instance is enabled or not.
+   * Assert WinCache instance is enabled or not.
    */
   public function assertWinCacheInstance() {
     $wincacheenabled = (function_exists('WinCache_ucache_info') && ($cache = @WinCache_ucache_info()));
