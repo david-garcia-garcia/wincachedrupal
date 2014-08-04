@@ -145,7 +145,8 @@ define('CACHE_MAX_ENTRY', 250);
 $settings_to_hide = array('wincache.localheap', 'wincache.debuglevel', 'wincache.olocaltest');
 
 // Input parameters check.
-$PHP_SELF = isset($_SERVER['PHP_SELF']) ? htmlentities(strip_tags($_SERVER['PHP_SELF'],''), ENT_QUOTES, 'UTF-8') : '';
+//$PHP_SELF = isset($_SERVER['PHP_SELF']) ? htmlentities(strip_tags($_SERVER['PHP_SELF'],''), ENT_QUOTES, 'UTF-8') : '';
+$PHP_SELF = strtok($_SERVER['REQUEST_URI'],'?');
 $page = isset($_GET['page']) ? $_GET['page'] : SUMMARY_DATA;
 if (!is_numeric($page) || $page < SUMMARY_DATA || $page > RCACHE_DATA)
   $page = SUMMARY_DATA;
@@ -890,12 +891,12 @@ if (USE_AUTHENTICATION && $user_cache_available && $clear_user_cache) {
         </div>
         <div id="menu">
             <ul>
-                <li <?php echo ($page == SUMMARY_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo strtok($_SERVER['REQUEST_URI'],'?') , '?page=', SUMMARY_DATA; ?>">Summary</a></li>
-                <li <?php echo ($page == OCACHE_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo strtok($_SERVER['REQUEST_URI'],'?') , '?page=', OCACHE_DATA; ?>">Opcode Cache</a></li>
-                <li <?php echo ($page == FCACHE_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo strtok($_SERVER['REQUEST_URI'],'?') , '?page=', FCACHE_DATA; ?>">File System Cache</a></li>
-                <li <?php echo ($page == UCACHE_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo strtok($_SERVER['REQUEST_URI'],'?') , '?page=', UCACHE_DATA; ?>">User Cache</a></li>
-                <li <?php echo ($page == SCACHE_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo strtok($_SERVER['REQUEST_URI'],'?') , '?page=', SCACHE_DATA; ?>">Session Cache</a></li>
-                <li <?php echo ($page == RCACHE_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo strtok($_SERVER['REQUEST_URI'],'?') , '?page=', RCACHE_DATA; ?>">Resolve Path Cache</a></li>
+                <li <?php echo ($page == SUMMARY_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo $PHP_SELF , '?page=', SUMMARY_DATA; ?>">Summary</a></li>
+                <li <?php echo ($page == OCACHE_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo $PHP_SELF , '?page=', OCACHE_DATA; ?>">Opcode Cache</a></li>
+                <li <?php echo ($page == FCACHE_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo $PHP_SELF , '?page=', FCACHE_DATA; ?>">File System Cache</a></li>
+                <li <?php echo ($page == UCACHE_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo $PHP_SELF , '?page=', UCACHE_DATA; ?>">User Cache</a></li>
+                <li <?php echo ($page == SCACHE_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo $PHP_SELF , '?page=', SCACHE_DATA; ?>">Session Cache</a></li>
+                <li <?php echo ($page == RCACHE_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo $PHP_SELF , '?page=', RCACHE_DATA; ?>">Resolve Path Cache</a></li>
             </ul>
         </div>
         <?php if ($page == SUMMARY_DATA) { 
@@ -1613,7 +1614,8 @@ if (USE_AUTHENTICATION && $user_cache_available && $clear_user_cache) {
         <div class="overview">
             <p class="notice">
                 The session cache is not enabled. To enable session cache set the session handler in <strong>php.ini</strong> to 
-        <strong>wincache</strong>, for example: <strong>session.save_handler=wincache</strong>.
+        <strong>wincache</strong>, for example: <strong>session.save_handler=wincache</strong>. </p><p class="notice">
+                If you are using Drupal: there is currently no Drupal specific session handler implementation for Wincache.
             </p>
         </div>
         <?php }?>

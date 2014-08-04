@@ -203,6 +203,20 @@
  
  ; 85 Mb
  wincache.ucachesize = 85
+
+ NOTE: Using this configuration will not tell Drupal to use wincache session
+ handler because Drupal implements it's own session handling system that must
+ be overriden within Drupal itself. Check this link for additional information:
+
+ http://drupal.stackexchange.com/questions/39065/understanding-drupals-session-management-and-user-authentication
+
+ For session management, Drupal plugs into PHP session handling and register it
+ own handlers. The Drupal session backend is itself pluggable, you can set the
+ session_inc variable to the path of a file providing alternative
+ implementations of the functions found in includes/session.inc. The memcache
+ module use this to store session in memcached.
+
+ There is currently no Drupal specifica session handler for Wincache.
  
 /*****************
  * 6. Optional - Speed up anonymous page cache
