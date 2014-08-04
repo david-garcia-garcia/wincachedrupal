@@ -1,40 +1,54 @@
 <?php
-/*
-+----------------------------------------------------------------------------------------------+
-| Windows Cache for PHP                                                                        |
-+----------------------------------------------------------------------------------------------+
-| Copyright (c) 2009, Microsoft Corporation. All rights reserved.                              |
-|                                                                                              |
-| Redistribution and use in source and binary forms, with or without modification, are         |
-| permitted provided that the following conditions are met:                                    |
-| - Redistributions of source code must retain the above copyright notice, this list of        |
-| conditions and the following disclaimer.                                                     |
-| - Redistributions in binary form must reproduce the above copyright notice, this list of     |
-| conditions and the following disclaimer in the documentation and/or other materials provided |
-| with the distribution.                                                                       |
-| - Neither the name of the Microsoft Corporation nor the names of its contributors may be     |
-| used to endorse or promote products derived from this software without specific prior written|
-| permission.                                                                                  |
-|                                                                                              |
-| THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS  |
-| OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF              |
-| MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE   |
-| COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,    |
-| EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE|
-| GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED   |
-| AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    |
-| NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED |
-| OF THE POSSIBILITY OF SUCH DAMAGE.                                                           |
-+----------------------------------------------------------------------------------------------+
-| Module: wincache.php                                                                         |
-+----------------------------------------------------------------------------------------------+
-| Authors: Don Venkat Raman <don.raman@microsoft.com>                                          |
-|          Ruslan Yakushev <ruslany@microsoft.com>                                             |
-+----------------------------------------------------------------------------------------------+
+
+/**
+ * @file
+ * Wincache Statistics report. 
  */
 
 /**
- * ======================== CONFIGURATION SETTINGS ==============================
+ * Windows Cache for PHP
+ *
+ * Copyright (c) 2009, Microsoft Corporation. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * - Redistributions of source code must retain the above
+ * copyright notice, this list of conditions and the following disclaimer.
+ *
+ * - Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * - Neither the name of the Microsoft Corporation nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, 
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR 
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, 
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * ---------------------------------------------------------------------------
+ * Module: wincache.php
+ * ---------------------------------------------------------------------------
+ * Authors:
+ * ---------------------------------------------------------------------------
+ * Don Venkat Raman <don.raman@microsoft.com>
+ * Ruslan Yakushev <ruslany@microsoft.com>
+ */
+
+/**
+ * Configuration settings.
+ *
  * If you do not want to use authentication for this page, set USE_AUTHENTICATION to 0.
  * If you use authentication then replace the default password.
  */
@@ -43,6 +57,8 @@ define('USERNAME', 'wincache');
 define('PASSWORD', 'wincache');
 
 /**
+ * Authentication.
+ *
  * The Basic PHP authentication will work only when IIS is configured to support 
  * Anonymous Authentication' and nothing else. If IIS is configured to support/use
  * any other kind of authentication like Basic/Negotiate/Digest etc, this will not work.
@@ -60,30 +76,29 @@ $user_allowed = array('DOMAIN\user1', 'DOMAIN\user2', 'DOMAIN\user3');
 
 /** ===================== END OF CONFIGURATION SETTINGS ========================== */
 
-if (!extension_loaded('wincache'))
-{
+if (!extension_loaded('wincache')) {
   die('The extension WINCACHE (php_wincache.dll) is not loaded. No statistics to show. ');
 }
 
-if (USE_AUTHENTICATION == 1) {
-  if (!empty($_SERVER['AUTH_TYPE']) && !empty($_SERVER['REMOTE_USER']) && strcasecmp($_SERVER['REMOTE_USER'], 'anonymous'))
-  {
+if (!defined('BYPASS_SECURITY_CHECK')) {
+  define('BYPASS_SECURITY_CHECK', FALSE);
+}
+
+if (USE_AUTHENTICATION == 1 && !(BYPASS_SECURITY_CHECK === TRUE)) {
+  if (!empty($_SERVER['AUTH_TYPE']) && !empty($_SERVER['REMOTE_USER']) && strcasecmp($_SERVER['REMOTE_USER'], 'anonymous')) {
     if (!in_array(strtolower($_SERVER['REMOTE_USER']), array_map('strtolower', $user_allowed))
-    && !in_array('all', array_map('strtolower', $user_allowed)))
-    {
+    && !in_array('all', array_map('strtolower', $user_allowed))) {
       echo 'You are not authorised to view this page. Please contact server admin to get permission. Exiting. ';
       exit;
     }
   }
-  else if (!isset($_SERVER['PHP_AUTH_USER']) || !isset($_SERVER['PHP_AUTH_PW']) ||
-            $_SERVER['PHP_AUTH_USER'] != USERNAME || $_SERVER['PHP_AUTH_PW'] != PASSWORD) {
+  elseif (!isset($_SERVER['PHP_AUTH_USER']) || !isset($_SERVER['PHP_AUTH_PW']) || $_SERVER['PHP_AUTH_USER'] != USERNAME || $_SERVER['PHP_AUTH_PW'] != PASSWORD) {
     header('WWW-Authenticate: Basic realm="WINCACHE Log In!"');
     header('HTTP/1.0 401 Unauthorized');
     exit;
   }
-  else if ($_SERVER['PHP_AUTH_PW'] == 'wincache')
-  {
-    echo "Please change the default password to get this page working. Exiting.";
+  elseif ($_SERVER['PHP_AUTH_PW'] == 'wincache') {
+    echo "Please change the default password to get this page worPking. Exiting.";
     exit;
   }
 }
@@ -91,11 +106,16 @@ if (USE_AUTHENTICATION == 1) {
 define('IMG_WIDTH', 320);
 define('IMG_HEIGHT', 220);
 define('SUMMARY_DATA', 1);
-define('OCACHE_DATA', 2); // Opcode cache
-define('FCACHE_DATA', 3); // File cache
-define('UCACHE_DATA', 4); // User cache
-define('SCACHE_DATA', 5); // Session cache
-define('RCACHE_DATA', 6); // Resolve file cache
+// Opcode cache.
+define('OCACHE_DATA', 2);
+// File cache.
+define('FCACHE_DATA', 3);
+// User cache.
+define('UCACHE_DATA', 4);
+// Session cache.
+define('SCACHE_DATA', 5);
+// Resolve file cache.
+define('RCACHE_DATA', 6);
 define('BAR_CHART', 1);
 define('PIE_CHART', 2);
 define('PATH_MAX_LENGTH', 45);
@@ -103,10 +123,10 @@ define('INI_MAX_LENGTH', 45);
 define('SUBKEY_MAX_LENGTH', 90);
 define('CACHE_MAX_ENTRY', 250);
 
-// WinCache settings that are used for debugging purposes
+// WinCache settings that are used for debugging purposes.
 $settings_to_hide = array('wincache.localheap', 'wincache.debuglevel', 'wincache.olocaltest');
 
-// Input parameters check
+// Input parameters check.
 $PHP_SELF = isset($_SERVER['PHP_SELF']) ? htmlentities(strip_tags($_SERVER['PHP_SELF'],''), ENT_QUOTES, 'UTF-8') : '';
 $page = isset($_GET['page']) ? $_GET['page'] : SUMMARY_DATA;
 if (!is_numeric($page) || $page < SUMMARY_DATA || $page > RCACHE_DATA)
@@ -129,7 +149,7 @@ if (isset($_GET['p1']) && is_numeric($_GET['p1'])) {
   $chart_param1 = $_GET['p1'];
   if ($chart_param1 < 0) 
     $chart_param1 = 0;
-  else if ($chart_param1 > PHP_INT_MAX)
+  elseif ($chart_param1 > PHP_INT_MAX)
     $chart_param1 = PHP_INT_MAX;
 }
 $chart_param2 = 0;
@@ -137,7 +157,7 @@ if (isset($_GET['p2']) && is_numeric($_GET['p2'])) {
   $chart_param2 = $_GET['p2'];
   if ($chart_param2 < 0) 
     $chart_param2 = 0;
-  else if ($chart_param2 > PHP_INT_MAX)
+  elseif ($chart_param2 > PHP_INT_MAX)
     $chart_param2 = PHP_INT_MAX;
 }
 
@@ -155,29 +175,29 @@ if (isset($_GET['clc']) && is_numeric($_GET['clc'])) {
     $clear_user_cache = 0;
 }
 
-$ucache_key = null;
+$ucache_key = NULL;
 if (isset($_GET['key']))
   $ucache_key = $_GET['key'];
-// End of input parameters check
+// End of input parameters check.
 
-// Initialize global variables
+// Initialize global variables.
 $user_cache_available = function_exists('wincache_ucache_info') && !strcmp(ini_get('wincache.ucenabled'), "1");
 $session_cache_available = function_exists('wincache_scache_info') && !strcasecmp(ini_get('session.save_handler'), "wincache");
-$ocache_mem_info = null;
-$ocache_file_info = null;
-$ocache_summary_info = null;
-$fcache_mem_info = null;
-$fcache_file_info = null;
-$fcache_summary_info = null;
-$rpcache_mem_info = null;
-$rpcache_file_info = null;
-$ucache_mem_info = null;
-$ucache_info = null;
-$scache_mem_info = null;
-$scache_info = null;
-$sort_key = null;
+$ocache_mem_info = NULL;
+$ocache_file_info = NULL;
+$ocache_summary_info = NULL;
+$fcache_mem_info = NULL;
+$fcache_file_info = NULL;
+$fcache_summary_info = NULL;
+$rpcache_mem_info = NULL;
+$rpcache_file_info = NULL;
+$ucache_mem_info = NULL;
+$ucache_info = NULL;
+$scache_mem_info = NULL;
+$scache_info = NULL;
+$sort_key = NULL;
 
-if ($session_cache_available && ($page == SUMMARY_DATA || $page == SCACHE_DATA)){
+if ($session_cache_available && ($page == SUMMARY_DATA || $page == SCACHE_DATA)) {
   @session_name('WINCACHE_SESSION');
   session_start();
 }
@@ -187,7 +207,7 @@ function cmp($a, $b)
   global $sort_key;
   if ($sort_key == 'file_name')
     return strcmp(get_trimmed_filename($a[$sort_key], PATH_MAX_LENGTH), get_trimmed_filename($b[$sort_key], PATH_MAX_LENGTH));
-  else if ($sort_key == 'resolve_path')
+  elseif ($sort_key == 'resolve_path')
     return strcmp(get_trimmed_string($a[$sort_key], PATH_MAX_LENGTH), get_trimmed_string($b[$sort_key], PATH_MAX_LENGTH));
   else
     return 0;
@@ -202,21 +222,19 @@ function convert_bytes_to_string($bytes) {
 }
 
 function seconds_to_words($seconds) {
-  /*** return value ***/
+  // Return value.
   $ret = "";
-
-  /*** get the hours ***/
+  // Get the hours.
   $hours = intval(intval($seconds) / 3600);
   if ($hours > 0) {
     $ret .= "$hours hours ";
   }
-  /*** get the minutes ***/
+  // Get the minutes.
   $minutes = bcmod((intval($seconds) / 60), 60);
-  if($hours > 0 || $minutes > 0) {
+  if ($hours > 0 || $minutes > 0) {
     $ret .= "$minutes minutes ";
   }
-
-  /*** get the seconds ***/
+  // Get the seconds.
   $seconds = bcmod(intval($seconds), 60);
   $ret .= "$seconds seconds";
 
@@ -224,28 +242,33 @@ function seconds_to_words($seconds) {
 }
 
 function get_trimmed_filename($filepath, $max_len) {
-  if ($max_len <= 0) die ('The maximum allowed length must be bigger than 0');
-  
+  if ($max_len <= 0) {
+    die ('The maximum allowed length must be bigger than 0');
+  }
   $result = basename($filepath);
   if (strlen($result) > $max_len) 
     $result = substr($result, -1 * $max_len);
-  
+
   return $result;
 }
 
 function get_trimmed_string($input, $max_len) {
-  if ($max_len <= 3) die ('The maximum allowed length must be bigger than 3');
-  
+  if ($max_len <= 3) {
+    die ('The maximum allowed length must be bigger than 3');
+  }
+
   $result = $input;
   if (strlen($result) > $max_len) 
     $result = substr($result, 0, $max_len - 3). ' ... ';
-  
+
   return $result;
 }
 
 function get_trimmed_ini_value($input, $max_len, $separators = array('|', ',')) {
-  if ($max_len <= 3) die ('The maximum allowed length must be bigger than 3');
-  
+  if ($max_len <= 3) {
+    die ('The maximum allowed length must be bigger than 3');
+  }
+
   $result = $input;
   $lastindex = 0;
   if (strlen($result) > $max_len) {
@@ -253,11 +276,13 @@ function get_trimmed_ini_value($input, $max_len, $separators = array('|', ',')) 
     if (!is_array($separators)) die('The separators must be in an array');
     foreach ($separators as $separator) {
       $index = strripos($result, $separator);
-      if ($index !== false  && $index > $lastindex)
+      if ($index !== false  && $index > $lastindex) {
         $lastindex = $index;
+      }
     }
-    if (0 < $lastindex && $lastindex < ($max_len - 3))
+    if (0 < $lastindex && $lastindex < ($max_len - 3)) {
       $result = substr($result, 0, $lastindex + 1). ' ... ';
+    }
   }
   return $result;
 }
@@ -304,21 +329,17 @@ function get_ocache_size_markup($size) {
 function get_chart_title($chart_data) {
   $chart_title = '';
   switch($chart_data) {
-    case OCACHE_DATA: {
-        $chart_title = 'Opcode Cache';
-        break;
-      }
-    case FCACHE_DATA: {
-        $chart_title = 'File Cache';
-        break;
-      }
-    case UCACHE_DATA: {
-        $chart_title = 'User Cache';
-        break;
-      }
-    case SCACHE_DATA: {
-        $chart_title = 'Session Cache';
-      }
+    case OCACHE_DATA:
+      $chart_title = 'Opcode Cache';
+      break;
+    case FCACHE_DATA:
+      $chart_title = 'File Cache';
+      break;
+    case UCACHE_DATA:
+      $chart_title = 'User Cache';
+      break;
+    case SCACHE_DATA:
+      $chart_title = 'Session Cache';
   }
   return $chart_title;
 }
@@ -347,34 +368,40 @@ if ($img > 0) {
 
     // colors 
     $white = imagecolorallocate($image, 0xFF, 0xFF, 0xFF);
-    $phpblue = imagecolorallocate($image, 0x5C, 0x87, 0xB2); 
-    $black = imagecolorallocate($image, 0x00, 0x00, 0x00); 
+    $phpblue = imagecolorallocate($image, 0x5C, 0x87, 0xB2);
+    $black = imagecolorallocate($image, 0x00, 0x00, 0x00);
     $gray = imagecolorallocate($image, 0xC0, 0xC0, 0xC0);
 
     $maxval = max($data);
     $nval = sizeof($data);
 
-    // draw something here
-    $hmargin = 38; // left horizontal margin for y-labels 
-    $vmargin = 20; // top (bottom) vertical margin for title (x-labels) 
+    // Draw something here.
+    // Left horizontal margin for y-labels.
+    $hmargin = 38;
+    // Top (bottom) vertical margin for title (x-labels).
+    $vmargin = 20; 
 
     $base = floor(($width - $hmargin) / $nval);
 
-    $xsize = $nval * $base - 1; // x-size of plot
-    $ysize = $height - 2 * $vmargin; // y-size of plot
+    // X-size of plot.
+    $xsize = $nval * $base - 1;
+    // Y-size of plot.
+    $ysize = $height - 2 * $vmargin;
     
-    // plot frame 
+    // Plot frame.
     imagerectangle($image, $hmargin, $vmargin, $hmargin + $xsize, $vmargin + $ysize, $black); 
 
-    // top label
+    // Top label.
     $titlefont = 3;
     $txtsize = imagefontwidth($titlefont) * strlen($title);
     $xpos = (int)($hmargin + ($xsize - $txtsize) / 2);
-    $xpos = max(1, $xpos); // force positive coordinates 
-    $ypos = 3; // distance from top 
-    imagestring($image, $titlefont, $xpos, $ypos, $title , $black); 
+    // Force positive coordinates.
+    $xpos = max(1, $xpos);
+    // Distance from top.
+    $ypos = 3;
+    imagestring($image, $titlefont, $xpos, $ypos, $title , $black);
 
-    // grid lines
+    // Grid lines.
     $labelfont = 2;
     $ngrid = 4;
 
@@ -384,28 +411,30 @@ if ($img > 0) {
     for ($i = 0; $i <= $ngrid; $i++) {
       $ydat = (int)($i * $dydat);
       $ypos = $vmargin + $ysize - (int)($i * $dypix);
-      
+
       $txtsize = imagefontwidth($labelfont) * strlen($ydat);
       $txtheight = imagefontheight($labelfont);
-      
+
       $xpos = (int)(($hmargin - $txtsize) / 2);
       $xpos = max(1, $xpos);
-      
+
       imagestring($image, $labelfont, $xpos, $ypos - (int)($txtheight/2), $ydat, $black);
-      
+
       if (!($i == 0) && !($i >= $ngrid)) 
         imageline($image, $hmargin - 3, $ypos, $hmargin + $xsize, $ypos, $gray); 
-      // don't draw at Y=0 and top 
+      // Don't draw at Y=0 and top.
     }
 
-    // graph bars
-    // columns and x labels 
-    $padding = 30; // half of spacing between columns 
-    $yscale = $ysize / ($ngrid * $dydat); // pixels per data unit 
+    // Graph bars.
+    // Columns and x labels.
+    // Galf of spacing between columns.
+    $padding = 30;
+    // Pixels per data unit.
+    $yscale = $ysize / ($ngrid * $dydat);
 
-    for ($i = 0; list($xval, $yval) = each($data); $i++) { 
+    for ($i = 0; list($xval, $yval) = each($data); $i++) {
 
-      // vertical columns 
+      // Vertical columns.
       $ymax = $vmargin + $ysize; 
       $ymin = $ymax - (int)($yval * $yscale); 
       $xmax = $hmargin + ($i + 1) * $base - $padding; 
@@ -413,13 +442,14 @@ if ($img > 0) {
 
       imagefilledrectangle($image, $xmin, $ymin, $xmax, $ymax, $phpblue); 
 
-      // x labels 
+      // X labels.
       $xlabel = $xval. ': ' .$yval. '%';
       $txtsize = imagefontwidth($labelfont) * strlen($xlabel);
 
       $xpos = ($xmin + $xmax - $txtsize) / 2;
-      $xpos = max($xmin, $xpos); 
-      $ypos = $ymax + 3; // distance from x axis
+      $xpos = max($xmin, $xpos);
+      // Distance from x axis.
+      $ypos = $ymax + 3; 
 
       imagestring($image, $labelfont, $xpos, $ypos, $xlabel, $black); 
     }
@@ -427,7 +457,7 @@ if ($img > 0) {
   }
   
   function create_used_free_chart($width, $height, $used_memory, $free_memory, $title = 'Free & Used Memory (in %)') {
-    // Check the input parameters to avoid division by zero and weird cases
+    // Check the input parameters to avoid division by zero and weird cases.
     if ($free_memory <= 0 && $used_memory <= 0) {
       $free_memory = 1;
       $used_memory = 0;
@@ -437,38 +467,41 @@ if ($img > 0) {
     $centerY = 120;
     $diameter = 120;
 
-    $hmargin = 5; // left (right) horizontal margin
-    $vmargin = 20; // top (bottom) vertical margin
+    // Left (right) horizontal margin.
+    $hmargin = 5;
+    // Top (bottom) vertical margin.
+    $vmargin = 20;
 
     $image = imagecreate($width, $height);
 
-    // colors 
+    // Colors. 
     $white = imagecolorallocate($image, 0xFF, 0xFF, 0xFF);
     $black = imagecolorallocate($image, 0x00, 0x00, 0x00);
     $pie_color[1] = imagecolorallocate($image, 0x5C, 0x87, 0xB2);
     $pie_color[2] = imagecolorallocate($image, 0xCB, 0xE1, 0xEF);
     $pie_color[3] = imagecolorallocate($image, 0xC0, 0xC0, 0xC0);
 
-    // Label font size
+    // Label font size.
     $labelfont = 2;
     $hfw = imagefontwidth($labelfont);
     $vfw = imagefontheight($labelfont);
 
-    // Border
+    // Border.
     imagerectangle($image, $hmargin, $vmargin, $width - $hmargin, $height - $vmargin, $black); 
 
-    // Top label
+    // Top label.
     $titlefont = 3;
     $txtsize = imagefontwidth($titlefont) * strlen($title);
     $hpos = (int)(($width - $txtsize) / 2);
-    $vpos = 3; // distance from top 
+    // Distance from top.
+    $vpos = 3; 
     imagestring($image, $titlefont, $hpos, $vpos, $title , $black);
 
     $total = 0;
     $n = 0;
     $items = array('Used memory' => $used_memory, 'Free memory' => $free_memory);
 
-    //read the arguments into different arrays:
+    // Read the arguments into different arrays:
     foreach($items as $key => $val) {
       $n++;
       $label[$n] = $key;
@@ -478,20 +511,20 @@ if ($img > 0) {
       $arc_rad[$n] = $total*2*pi();
     }
 
-    //the base:
+    // The base:
     $arc_rad[0] = 0;
     $arc_dec[0] = 0;
 
-    //count the labels:
+    // Count the labels:
     for ($i = 1; $i <= $n; $i++) {
       
-      //calculate the percents:
+      // Calculate the percents:
       $perc[$i] = $value[$i] / $total;
       $percstr[$i] = (string) number_format($perc[$i] * 100, 2)."%";
-      //label with percentage:
+      // Label with percentage:
       $label[$i] = $percstr[$i];
 
-      //calculate the arc and line positions:
+      // Calculate the arc and line positions:
       $arc_rad[$i] = $arc_rad[$i] / $total;
       $arc_dec[$i] = $arc_dec[$i] / $total;
       $hpos = round($centerX + ($diameter / 2) * sin($arc_rad[$i]));
@@ -499,7 +532,7 @@ if ($img > 0) {
       imageline($image, $centerX, $centerY, $hpos, $vpos, $black);
       imagearc($image, $centerX, $centerY, $diameter, $diameter, $arc_dec[$i-1], $arc_dec[$i], $black);
 
-      //calculate the positions for the labels:
+      // Calculate the positions for the labels:
       $arc_rad_label = $arc_rad[$i-1] + 0.5 * $perc[$i] * 2 * pi();
       $hpos = $centerX + 1.1 * ($diameter / 2) * sin($arc_rad_label);
       $vpos = $centerY + 1.1 * ($diameter / 2) * cos($arc_rad_label);
@@ -509,11 +542,11 @@ if ($img > 0) {
       if ($arc_rad_label > pi()) {
         $hpos = $hpos - $hfw * strlen($label[$i]);
       }
-      //display the labels:
+      // Display the labels:
       imagestring($image, $labelfont, $hpos, $vpos, $label[$i], $black);
     }
 
-    //fill the parts with their colors:
+    // Fill the parts with their colors:
     for ($i = 1; $i <= $n; $i++) {
       if (round($arc_dec[$i] - $arc_dec[$i-1]) != 0) {
         $arc_rad_label = $arc_rad[$i - 1] + 0.5 * $perc[$i] * 2 * pi();
@@ -523,12 +556,12 @@ if ($img > 0) {
       }
     }
 
-    // legend
+    // Legend.
     $hpos = $centerX + 1.1 * ($diameter / 2) + $hfw * strlen('50.00%');
     $vpos = $centerY - ($diameter / 2);
     $i = 1;
     $thumb_size = 5;
-    foreach ($items as $key => $value){
+    foreach ($items as $key => $value) {
       imagefilledrectangle($image, $hpos, $vpos, $hpos + $thumb_size, $vpos + $thumb_size, $pie_color[$i++]);
       imagestring($image, $labelfont, $hpos + $thumb_size + 5, $vpos, $key, $black);
       $vpos += $vfw + 2;
@@ -536,18 +569,18 @@ if ($img > 0) {
     return $image;
   }
 
-  $png_image = null;
+  $png_image = NULL;
   $chart_title = get_chart_title($img);
   
-  if ($chart_type == PIE_CHART){
+  if ($chart_type == PIE_CHART) {
     $png_image = create_used_free_chart(IMG_WIDTH, IMG_HEIGHT, $chart_param1, $chart_param2, 'Memory Usage by ' .$chart_title. ' (in %)');
   }
   else{
     $png_image = create_hit_miss_chart(IMG_WIDTH, IMG_HEIGHT,  $chart_param1, $chart_param2, $chart_title. ' Hits & Misses (in %)');
   }
 
-  if ($png_image !== null) {
-    // flush image 
+  if ($png_image !== NULL) {
+    // Flush image.
     header('Content-type: image/png');
     imagepng($png_image);
     imagedestroy($png_image); 
@@ -561,10 +594,11 @@ function get_chart_markup($data_type, $chart_type, $chart_param1, $chart_param2)
   $result = '';
   $alt_title = '';
 
-  if (gd_loaded()){
+  if (gd_loaded()) {
     $alt_title = get_chart_title($data_type);
-    if ($alt_title == '')
+    if ($alt_title == '') {
       return '';
+    }
 
     if ($chart_type == BAR_CHART)
       $alt_title .= ' hit and miss percentage chart';
@@ -573,10 +607,10 @@ function get_chart_markup($data_type, $chart_type, $chart_param1, $chart_param2)
     else
       return '';
 
-    $result = '<img src="' .$PHP_SELF;
-    $result .= '?img=' .$data_type. '&amp;type=' .$chart_type;
-    $result .= '&amp;p1=' .$chart_param1. '&amp;p2=' .$chart_param2. '" ';
-    $result .= 'alt="' .$alt_title. '" width="' .IMG_WIDTH. '" height="' .IMG_HEIGHT. '" />';
+    $result = '<img src="' . $PHP_SELF;
+    $result .= '?img=' . $data_type . '&amp;type=' . $chart_type;
+    $result .= '&amp;p1=' . $chart_param1 . '&amp;p2=' . $chart_param2 . '" ';
+    $result .= 'alt="' . $alt_title . '" width="' . IMG_WIDTH . '" height="' . IMG_HEIGHT . '" />';
   }
   else {
     $result = '<p class="notice">Enable GD library (<em>php_gd2.dll</em>) in order to see the charts.</p>';
@@ -590,8 +624,24 @@ function cache_scope_text($is_local)
   return ($is_local == true) ? 'local' : 'global';
 }
 
+global  $ocache_mem_info, 
+$ocache_file_info,
+$ocache_summary_info,
+$fcache_mem_info,
+$fcache_file_info,
+$fcache_summary_info,
+$rpcache_mem_info,
+$rpcache_file_info,
+$ucache_mem_info,
+$ucache_info,
+$scache_mem_info,
+$scache_info,
+$user_cache_available,
+$session_cache_available;
+
 function init_cache_info($cache_data = SUMMARY_DATA)
 {
+  // Redeclare globals to keep scope.
   global  $ocache_mem_info, 
   $ocache_file_info,
   $ocache_summary_info,
@@ -617,23 +667,23 @@ function init_cache_info($cache_data = SUMMARY_DATA)
     $fcache_file_info = wincache_fcache_fileinfo();
     $fcache_summary_info = get_fcache_summary($fcache_file_info['file_entries']);
   }
-  if ($cache_data == SUMMARY_DATA || $cache_data == RCACHE_DATA){
+  if ($cache_data == SUMMARY_DATA || $cache_data == RCACHE_DATA) {
     $rpcache_mem_info = wincache_rplist_meminfo();
     $rpcache_file_info = wincache_rplist_fileinfo();
   }
-  if ($user_cache_available && ($cache_data == SUMMARY_DATA || $cache_data == UCACHE_DATA)){
+  if ($user_cache_available && ($cache_data == SUMMARY_DATA || $cache_data == UCACHE_DATA)) {
     $ucache_mem_info = wincache_ucache_meminfo();
     $ucache_info = wincache_ucache_info();
   }
-  if ($session_cache_available && ($cache_data == SUMMARY_DATA || $cache_data == SCACHE_DATA)){
+  if ($session_cache_available && ($cache_data == SUMMARY_DATA || $cache_data == SCACHE_DATA)) {
     $scache_mem_info = wincache_scache_meminfo();
     $scache_info = wincache_scache_info();
   }
 }
 
-if (USE_AUTHENTICATION && $user_cache_available && $clear_user_cache){
+if (USE_AUTHENTICATION && $user_cache_available && $clear_user_cache) {
   wincache_ucache_clear();
-  header('Location: ' .$PHP_SELF. '?page=' .UCACHE_DATA);
+  header('Location: ' . $PHP_SELF . '?page=' . UCACHE_DATA);
   exit;
 }
 
@@ -837,12 +887,12 @@ if (USE_AUTHENTICATION && $user_cache_available && $clear_user_cache){
         </div>
         <div id="menu">
             <ul>
-                <li <?php echo ($page == SUMMARY_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo $PHP_SELF, '?page=', SUMMARY_DATA; ?>">Summary</a></li>
-                <li <?php echo ($page == OCACHE_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo $PHP_SELF, '?page=', OCACHE_DATA; ?>">Opcode Cache</a></li>
-                <li <?php echo ($page == FCACHE_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo $PHP_SELF, '?page=', FCACHE_DATA; ?>">File System Cache</a></li>
-                <li <?php echo ($page == UCACHE_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo $PHP_SELF, '?page=', UCACHE_DATA; ?>">User Cache</a></li>
-                <li <?php echo ($page == SCACHE_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo $PHP_SELF, '?page=', SCACHE_DATA; ?>">Session Cache</a></li>
-                <li <?php echo ($page == RCACHE_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo $PHP_SELF, '?page=', RCACHE_DATA; ?>">Resolve Path Cache</a></li>
+                <li <?php echo ($page == SUMMARY_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo strtok($_SERVER['REQUEST_URI'],'?') , '?page=', SUMMARY_DATA; ?>">Summary</a></li>
+                <li <?php echo ($page == OCACHE_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo strtok($_SERVER['REQUEST_URI'],'?') , '?page=', OCACHE_DATA; ?>">Opcode Cache</a></li>
+                <li <?php echo ($page == FCACHE_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo strtok($_SERVER['REQUEST_URI'],'?') , '?page=', FCACHE_DATA; ?>">File System Cache</a></li>
+                <li <?php echo ($page == UCACHE_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo strtok($_SERVER['REQUEST_URI'],'?') , '?page=', UCACHE_DATA; ?>">User Cache</a></li>
+                <li <?php echo ($page == SCACHE_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo strtok($_SERVER['REQUEST_URI'],'?') , '?page=', SCACHE_DATA; ?>">Session Cache</a></li>
+                <li <?php echo ($page == RCACHE_DATA)? 'class="selected"' : ''; ?>><a href="<?php echo strtok($_SERVER['REQUEST_URI'],'?') , '?page=', RCACHE_DATA; ?>">Resolve Path Cache</a></li>
             </ul>
         </div>
         <?php if ($page == SUMMARY_DATA) { 
@@ -1158,7 +1208,7 @@ if (USE_AUTHENTICATION && $user_cache_available && $clear_user_cache){
                 </table>
             </div>
         </div>
-        <?php } else if ($page == OCACHE_DATA) {
+        <?php } elseif ($page == OCACHE_DATA) {
                 init_cache_info(OCACHE_DATA);
         ?>
         <div class="overview">
@@ -1247,7 +1297,7 @@ if (USE_AUTHENTICATION && $user_cache_available && $clear_user_cache){
                 ?>
             </table>
         </div>
-        <?php } else if ($page == FCACHE_DATA) {
+        <?php } elseif ($page == FCACHE_DATA) {
                 init_cache_info(FCACHE_DATA);
         ?>
         <div class="overview">
@@ -1326,7 +1376,7 @@ if (USE_AUTHENTICATION && $user_cache_available && $clear_user_cache){
                 ?>
             </table>
         </div>
-        <?php } else if ($page == UCACHE_DATA && $ucache_key == null) {
+        <?php } elseif ($page == UCACHE_DATA && $ucache_key == NULL) {
                 if ($user_cache_available) { 
                   init_cache_info(UCACHE_DATA);
         ?>
@@ -1407,7 +1457,7 @@ if (USE_AUTHENTICATION && $user_cache_available && $clear_user_cache){
                     echo '<td class="v">', $entry['age_seconds'],'</td>', "\n";
                     echo '<td class="v">', $entry['hitcount'],'</td>', "\n";
                     echo "</tr>\n";
-                    if ($count++ > CACHE_MAX_ENTRY && !$show_all_ucache_entries){
+                    if ($count++ > CACHE_MAX_ENTRY && !$show_all_ucache_entries) {
                       echo '<tr><td colspan="6"><a href="', $PHP_SELF, '?page=', UCACHE_DATA, '&amp;all=1">Show all entries</td></tr>';
                       break;
                     }
@@ -1423,8 +1473,8 @@ if (USE_AUTHENTICATION && $user_cache_available && $clear_user_cache){
             </p>
         </div>
         <?php }?>
-        <?php } else if ($page == UCACHE_DATA && $ucache_key != null && USE_AUTHENTICATION) {
-                if (!wincache_ucache_exists($ucache_key)){
+        <?php } elseif ($page == UCACHE_DATA && $ucache_key != NULL && USE_AUTHENTICATION) {
+                if (!wincache_ucache_exists($ucache_key)) {
         ?>
         <div class="overview">
             <p class="notice">The variable with this key does not exist in the user cache.</p>
@@ -1473,7 +1523,7 @@ if (USE_AUTHENTICATION && $user_cache_available && $clear_user_cache){
             </div>
         </div>
         <?php }?>
-        <?php } else if ($page == SCACHE_DATA) {
+        <?php } elseif ($page == SCACHE_DATA) {
                 if ($session_cache_available) {
                   init_cache_info(SCACHE_DATA);
         ?>
@@ -1548,7 +1598,7 @@ if (USE_AUTHENTICATION && $user_cache_available && $clear_user_cache){
                     echo '<td class="v">', $entry['age_seconds'],'</td>', "\n";
                     echo '<td class="v">', $entry['hitcount'],'</td>', "\n";
                     echo "</tr>\n";
-                    if ($count++ > CACHE_MAX_ENTRY && !$show_all_ucache_entries){
+                    if ($count++ > CACHE_MAX_ENTRY && !$show_all_ucache_entries) {
                       echo '<tr><td colspan="6"><a href="', $PHP_SELF, '?page=', SCACHE_DATA, '&amp;all=1">Show all entries</td></tr>';
                       break;
                     }
@@ -1564,7 +1614,7 @@ if (USE_AUTHENTICATION && $user_cache_available && $clear_user_cache){
             </p>
         </div>
         <?php }?>
-        <?php } else if ($page == RCACHE_DATA) {
+        <?php } elseif ($page == RCACHE_DATA) {
                 init_cache_info(RCACHE_DATA);
         ?>
         <div class="overview">

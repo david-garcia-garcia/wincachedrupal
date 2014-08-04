@@ -23,6 +23,32 @@ function wincachedrupal_page_alter(&$page) {
 }
 
 /**
+ * Implements hook_menu().
+ */
+function wincachedrupal_menu() {
+  $items['admin/reports/status/wincache'] = array(
+    'title' => 'Wincache',
+    'page callback' => 'WincacheDrupalStatsPageCallback',
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_CALLBACK,
+    'file' => 'wincachedrupal.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_admin_paths().
+ */
+function wincachedrupal_admin_paths() {
+  $paths = array(
+    // This page should not be treated as administrative since it outputs its
+    // own content (outside of any administration theme).
+    'admin/reports/status/wincache' => FALSE,
+  );
+  return $paths;
+}
+
+/**
  * Implements hook_permission().
  */
 function wincachedrupal_permission() {

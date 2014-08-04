@@ -23,10 +23,11 @@ function wincachedrupal_requirements($phase) {
   );
 
   if ($wincache_enabled) {
-    $requirements['wincache']['description'] = $t('WinCache has been running for !duration. Currently caching !num_entries entries.',
+    $requirements['wincache']['description'] = $t('WinCache has been running for !duration. Currently caching !num_entries entries. !admin_link',
       array(
         '!duration' => format_interval($cache['total_cache_uptime']),
         '!num_entries' => $cache['total_item_count'],
+        '!admin_link' => l('View Wincache Statistics', 'admin/reports/status/wincache'),
       )
     );
   }
