@@ -5,6 +5,7 @@
  * This integrates the drupal WinCache backend.
  */
 
+// Array to collect usage statistics.
 $wincache_statistics = array();
 
 /**
@@ -29,6 +30,13 @@ class DrupalWinCache implements DrupalCacheInterface {
     $this->bin = $bin;
   }
 
+  /**
+   * Manage statistics.
+   */
+  protected function AddStatistic($method, $keys, $wildcard = NULL){
+    $GLOBALS['wincache_statistics'][] = array($method, $this->bin, $keys, $wildcard);
+  }
+  
   /**
    * Function which retrieves the safe key for the cache bin.
    *
@@ -74,7 +82,7 @@ class DrupalWinCache implements DrupalCacheInterface {
     $this->garbageCollection($this->bin);
 
     // Add a get to our statistics.
-    $GLOBALS['wincache_statistics'][] = array('get', $this->bin, array($cid));
+    $this->AddStatistic('get', array($cid));
 
     // Fetch the data.
     $cache = wincache_ucache_get($this->key($cid));
@@ -157,7 +165,7 @@ class DrupalWinCache implements DrupalCacheInterface {
 
     unset($fetch);
     // Add a get to our statistics.
-    $GLOBALS['wincache_statistics'][] = array('get', $this->bin, $cids);
+    $this->AddStatistic('get', array($cid));
     $cids = array_diff($cids, array_keys($cache));
     return $cache;
   }
@@ -166,8 +174,6 @@ class DrupalWinCache implements DrupalCacheInterface {
    * Garbage collection for get and getMultiple methods.
    */
   protected function garbageCollection() {
-    global $user;
-
     // Garbage collection necessary when enforcing a minimum cache lifetime.
     $cache_flush = variable_get('cache_flush_' . $this->bin, 0);
     if ($cache_flush && ($cache_flush + variable_get('cache_lifetime', 0) <= REQUEST_TIME)) {
@@ -193,7 +199,7 @@ class DrupalWinCache implements DrupalCacheInterface {
    */
   public function set($cid, $data, $expire = CACHE_PERMANENT, array $headers = NULL) {
     // Add set to statistics.
-    $GLOBALS['wincache_statistics'][] = array('set', $this->bin, $cid);
+    $this->AddStatistic('set', array($cid));
 
     // Create new cache object.
     $cache = new stdClass();
@@ -241,14 +247,13 @@ class DrupalWinCache implements DrupalCacheInterface {
   }
 
   /**
-   * clear cached item in temporary cached mode.
+   * Clear cached item in temporary cached mode.
    */
   public function clearTemporary() {
     $data = wincache_ucache_info();
     $count = count($data['ucache_entries']);
     for ($i = 1; $i <= $count; $i++) {
-      if (strpos($data['ucache_entries'][$i]['key_name'], $this->binKey())
-          === 0) {
+      if (strpos($data['ucache_entries'][$i]['key_name'], $this->binKey()) === 0) {
         $cache = wincache_ucache_get($data['ucache_entries'][$i]['key_name']);
         if ($cache && $cache->expire == CACHE_TEMPORARY) {
           wincache_ucache_delete($data['ucache_entries'][$i]['key_name']);
@@ -265,15 +270,14 @@ class DrupalWinCache implements DrupalCacheInterface {
    * @param var $wildcard
    *   The wildcard.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if successfully cleared FALSE otherwise.
    */
   public function clear($cid = NULL, $wildcard = FALSE) {
     global $user;
 
     // Add a get to our statistics.
-    $GLOBALS['wincache_statistics'][]
-      = array('clear', $this->bin, $cid, (int) $wildcard);
+    $this->AddStatistic('clear', $cid, (int) $wildcard);
 
     if (empty($cid)) {
       if (variable_get('cache_lifetime', 0)) {
@@ -331,9 +335,9 @@ class DrupalWinCache implements DrupalCacheInterface {
   }
 
   /**
-   * Checks cache is empty
+   * Checks cache is empty.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if empty FALSE otherwise.
    */
   public function isEmpty() {
