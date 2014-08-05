@@ -194,6 +194,13 @@ if (isset($_GET['clc']) && is_numeric($_GET['clc'])) {
     $clear_user_cache = 0;
 }
 
+$clear_session_cache = 0;
+if (isset($_GET['clsc']) && is_numeric($_GET['clsc'])) {
+  $clear_session_cache = $_GET['clsc'];
+  if ($clear_session_cache < 0 || $clear_session_cache > 1)
+    $clear_session_cache = 0;
+}
+
 $ucache_key = NULL;
 if (isset($_GET['key']))
   $ucache_key = $_GET['key'];
@@ -216,7 +223,7 @@ $scache_mem_info = NULL;
 $scache_info = NULL;
 $sort_key = NULL;
 
-if ($session_cache_available && ($page == SUMMARY_DATA || $page == SCACHE_DATA)) {
+if ($session_cache_available && ($page == SUMMARY_DATA || $page == SCACHE_DATA) && (session_status() == PHP_SESSION_NONE)) {
   @session_name('WINCACHE_SESSION');
   session_start();
 }
@@ -688,6 +695,26 @@ function init_cache_info($cache_data = SUMMARY_DATA)
 if (USE_AUTHENTICATION && $user_cache_available && $clear_user_cache) {
   wincache_ucache_clear();
   header('Location: ' . $PHP_SELF . '?page=' . UCACHE_DATA);
+  exit;
+}
+
+if (USE_AUTHENTICATION && $session_cache_available && $clear_session_cache) {
+  init_cache_info(SCACHE_DATA);
+  $current_id = session_id();
+  // Destroy all session.
+  foreach ($scache_info['scache_entries'] as $entry) {
+    // Do not delete own session.
+    if ($current_id == $entry['key_name']) {
+      continue;
+    }
+    session_id($entry['key_name']);
+    session_start();
+    session_destroy();
+    session_write_close();
+  }
+  session_id($current_id);
+  session_start();
+  header('Location: ' . $PHP_SELF . '?page=' . SCACHE_DATA);
   exit;
 }
 
@@ -1547,7 +1574,9 @@ if (USE_AUTHENTICATION && $user_cache_available && $clear_user_cache) {
                     </tr>
                     <tr>
                         <td class="e">Cached entries</td>
-                        <td class="v"><?php echo $scache_info['total_item_count']; ?></td>
+                        <td class="v"><?php echo $scache_info['total_item_count'];
+                        if (USE_AUTHENTICATION && $scache_info['total_item_count'] > 0) 
+                                              echo ' (<a href="', $PHP_SELF, '?page=', UCACHE_DATA, '&amp;clsc=1">Clear All</a>)'; ?></td>
                     </tr>
                     <tr>
                         <td class="e">Hits</td>
