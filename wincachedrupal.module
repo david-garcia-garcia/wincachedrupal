@@ -10,7 +10,7 @@
  *
  * Used for displaying the WinCache stats for debug purposes.
  */
-function wincachedrupal_init(&$page) {
+function wincachedrupal_init() {
   global $user;
   global $wincache_collect_statistics;
   $wincache_collect_statistics = false;
