@@ -711,9 +711,15 @@ if (USE_AUTHENTICATION && $session_cache_available && $clear_session_cache) {
     session_start();
     session_destroy();
     session_write_close();
+    $no_session = TRUE;
   }
-  session_id($current_id);
-  session_start();
+  // When there is only one session and that is ours,
+  // calling session_start will fail because current
+  // session was not destroyed.
+  if (session_status() == PHP_SESSION_NONE) {
+    session_id($current_id);
+    session_start();
+  }
   header('Location: ' . $PHP_SELF . '?page=' . SCACHE_DATA);
   exit;
 }

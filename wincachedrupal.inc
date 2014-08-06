@@ -16,5 +16,5 @@ function WincacheDrupalStatsPageCallback() {
   // This page was developed by Microsoft, just adapted to Drupal
   // coding standards.
   module_load_include('php', 'wincachedrupal', 'misc/wincache');
-  exit();
+  drupal_exit();
 }
