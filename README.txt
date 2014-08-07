@@ -94,7 +94,9 @@
  windows systems. The drawback is that wincache has severe memory limitations
  so unless you have a small site, you should not be using it as your main
  cache backend, or be very carefull as to what cache tables you are redirecting
- to wincache.
+ to wincache. On small sites you can use Wincache as your default backend,
+ on medium to large sites just use the most frequently accesed caches
+ such as bootstrap, menu and/or variable.
  
  Copy the drupalwincache module into you site's module folder:
  
@@ -114,6 +116,8 @@
  // persistent cache storage with low size requirements.
  $conf['cache_class_cache'] = 'DrupalWinCache';
  $conf['cache_class_cache_bootstrap'] = 'DrupalWinCache';
+ $conf['cache_class_cache_menu'] = 'DrupalWinCache';
+ $conf['cache_class_cache_variable'] = 'DrupalWinCache';
 
  // If you have a small site then just set wincache as the default backend
  // and forget about memcache.
@@ -210,13 +214,12 @@
 
  http://drupal.stackexchange.com/questions/39065/understanding-drupals-session-management-and-user-authentication
 
- For session management, Drupal plugs into PHP session handling and register it
- own handlers. The Drupal session backend is itself pluggable, you can set the
- session_inc variable to the path of a file providing alternative
- implementations of the functions found in includes/session.inc. The memcache
- module use this to store session in memcached.
+ EXPERIMENTAL: There is an experimental implementation of the wincache session
+ handler for Drupal. Besides all the previous configuration, in your settings.php:
 
- There is currently no Drupal specifica session handler for Wincache.
+ $conf['session_inc'] = 'sites/all/modules/wincachedrupal/wincachedrupalsession.inc';
+
+ This experimental version has not been tested under HTTPS (secure) sites.
  
 /*****************
  * 6. Optional - Speed up anonymous page cache

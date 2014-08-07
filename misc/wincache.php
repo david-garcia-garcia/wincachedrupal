@@ -1650,7 +1650,7 @@ if (USE_AUTHENTICATION && $session_cache_available && $clear_session_cache) {
             <p class="notice">
                 The session cache is not enabled. To enable session cache set the session handler in <strong>php.ini</strong> to 
         <strong>wincache</strong>, for example: <strong>session.save_handler=wincache</strong>. </p><p class="notice">
-                If you are using Drupal: there is currently no Drupal specific session handler implementation for Wincache.
+                If you are using Drupal check the README.txt file of the <a href="https://www.drupal.org/project/wincachedrupal">WinCacheDrupal</a> module on how to enable the session cache.
             </p>
         </div>
         <?php }?>
