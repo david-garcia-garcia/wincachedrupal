@@ -61,7 +61,10 @@
  wincache.filecount = 8000
  wincache.ttlmax = 2000
  wincache.ucachesize = 85
- wincache.scachesize = 85
+ wincache.scachesize = 128
+
+ ; NOTE: Documentation for wincache extension is unproperly pointing to max values
+ ; for cache sizes. For ucachesize you can go all the way up to 2048Mb.
  
  ; Configure the file system funcion acces reroutes
  ; Make sure file exists and the IIS application has permissions to read.
@@ -96,7 +99,14 @@
  cache backend, or be very carefull as to what cache tables you are redirecting
  to wincache. On small sites you can use Wincache as your default backend,
  on medium to large sites just use the most frequently accesed caches
- such as bootstrap, menu and/or variable.
+ such as bootstrap, menu and/or variable. Maximum documented size for this
+ cache is 85Mb but you can go all the way up to 2048Mb without problems.
+
+ Adjust the cache size to fit your Drupal site, recomended to start with 128Mb.
+
+ CAREFUL: Exhaustion of usercache memory will slow down your site, keep an eye
+ every once in a while on the statistics page to make sure you have memory
+ overhead, and if don't, just increase ucache size.
  
  Copy the drupalwincache module into you site's module folder:
  

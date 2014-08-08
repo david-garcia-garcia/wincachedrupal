@@ -155,6 +155,12 @@ class DrupalWinCache implements DrupalCacheInterface {
    *   The array of cached items.
    */
   public function getMultiple(&$cids) {
+    // If requesting no $cids return empty array.
+    // Otherwise warnings are triggered.
+    if(empty($cids)) {
+      return array();
+    }
+  
     // Garbage collection necessary when enforcing a minimum cache lifetime.
     $this->garbageCollection($this->bin);
 
@@ -172,7 +178,7 @@ class DrupalWinCache implements DrupalCacheInterface {
 
     unset($fetch);
     // Add a get to our statistics.
-    $this->AddStatistic('get', array($cid));
+    $this->AddStatistic('getMultiple', $cids);
     $cids = array_diff($cids, array_keys($cache));
     return $cache;
   }
