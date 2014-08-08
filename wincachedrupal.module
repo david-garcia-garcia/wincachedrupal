@@ -13,15 +13,15 @@
 function wincachedrupal_init() {
   global $user;
   global $wincache_collect_statistics;
-  $wincache_collect_statistics = false;
-  
+  $wincache_collect_statistics = FALSE;
+
   if (($user->uid == 0) || !variable_get('wincache_show_debug', FALSE)
       || !user_access('access wincache statistics') || strstr($_SERVER['PHP_SELF'], 'update.php')
       || strstr($_GET['q'], 'autocomplete')) {
     return;
   }
 
-  $wincache_collect_statistics = true;
+  $wincache_collect_statistics = TRUE;
   register_shutdown_function('wincachedrupal_shutdown');
 }
 

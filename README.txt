@@ -26,8 +26,8 @@
 /*****************
  * 0. Installing and configuring the Wincache PHP Extension
  ****************/
- For all this to work you need to install the Wincache PHP Extension. I recommend
- downloading this extension from:
+ For all this to work you need to install the Wincache PHP Extension.
+ I recommend downloading this extension from:
  
  http://windows.php.net/downloads/pecl/releases/
  
@@ -63,8 +63,8 @@
  wincache.ucachesize = 85
  wincache.scachesize = 128
 
- ; NOTE: Documentation for wincache extension is unproperly pointing to max values
- ; for cache sizes. For ucachesize you can go all the way up to 2048Mb.
+ ; NOTE: Documentation for wincache extension is unproperly pointing to max
+ ; values for cache sizes. For ucachesize you can go all the way up to 2048Mb.
  
  ; Configure the file system funcion acces reroutes
  ; Make sure file exists and the IIS application has permissions to read.
@@ -79,30 +79,32 @@
  ; has read/write permissions.
  session.save_path = "C:\Program Files (x86)\PHP\php5_5_sessions\"
 
- ;Session data is not persisted by Wincache session handler if your appPool name has periods.
- ;If your app-pool name has periods (.) in it, change them to underscores (_). 
- ;So an app-pool named www.somesite.com should be renamed to www_somesite_com.
+ ; Session data is not persisted by Wincache session handler if your appPool
+ ; name has periods.
+ ; If your app-pool name has periods (.) in it, change them to underscores (_).
+ ; So an app-pool named www.somesite.com should be renamed to www_somesite_com.
  
- To make sure these settings are working, check you extension settings in phpinfo()
- and access the Wincache statistics page, on you first run you will need to customize
- the username and password of the wincache.php access by directly editing the file.
+ ; To make sure these settings are working, check you extension settings
+ ; in phpinfo() and access the Wincache statistics page, on you first
+ ; run you will need to customize the username and password of the
+ ; wincache.php access by directly editing the file.
  
  http://yoursite/sites/all/modules/drupalwincache/misc/wincache.php
  
 /*****************
  * 1. Cache Backend (AKA "User Cache")
  ****************/
- Wincache uses in memory storage wich makes it way faster than memcache
+ Wincache uses in memory storage which makes it way faster than memcache
  and other backend storage systems. It is a replacement for APC cache in
  windows systems. The drawback is that wincache has severe memory limitations
  so unless you have a small site, you should not be using it as your main
- cache backend, or be very carefull as to what cache tables you are redirecting
+ cache backend, or be very careful as to what cache tables you are redirecting
  to wincache. On small sites you can use Wincache as your default backend,
  on medium to large sites just use the most frequently accesed caches
  such as bootstrap, menu and/or variable. Maximum documented size for this
  cache is 85Mb but you can go all the way up to 2048Mb without problems.
 
- Adjust the cache size to fit your Drupal site, recomended to start with 128Mb.
+ Adjust the cache size to fit your site, recommended to start with 128Mb.
 
  CAREFUL: Exhaustion of usercache memory will slow down your site, keep an eye
  every once in a while on the statistics page to make sure you have memory
@@ -256,7 +258,7 @@
  The module does 3 things:
 
  - Adds information message to the status page.
- - Shows Wincache usage statistics when user has appropiate permissions
+ - Shows Wincache usage statistics when user has appropriate permissions
  and wincache_show_debug is set to true (in settings.php):
  $conf['wincache_show_debug'] = TRUE;
  - Provide a set of tests.

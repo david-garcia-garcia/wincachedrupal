@@ -69,20 +69,20 @@ function drupal_session_start() {
     $session_data = isset($_SESSION) ? $_SESSION : NULL;
 
     session_start();
-    
-    // Perform account accomodation.
-    if(isset($_SESSION['wincachesession']['user'])) {
+
+    // Perform account accommodation.
+    if (isset($_SESSION['wincachesession']['user'])) {
       try {
         $user = unserialize(gzuncompress($_SESSION['wincachesession']['user']));
-      } 
+      }
       catch(Exception $error) {
       }
-    } 
+    }
 
     if (empty($user)) {
       $user = drupal_anonymous_user();
     }
-    
+
     // Restore session data.
     if (!empty($session_data)) {
       $_SESSION += $session_data;
@@ -97,16 +97,17 @@ function drupal_session_start() {
  */
 function drupal_session_commit() {
   global $user, $is_https;
-  // Max. 85Mb wincache session cache can roughly accomodate 21,000 uncompressed
-  // and unserialized sessions. With compression and serialization turned on
-  // we get up to 55,000 sessions in the cache. This is OK for medium to large sites.
+  // Max. 85Mb wincache session cache can roughly accommodate 21,000 
+  // uncompressed and unserialized sessions. With compression and serialization
+  // turned on we get up to 55,000 sessions in the cache. 
+  // This is OK for medium to large sites.
   if (session_status() != PHP_SESSION_ACTIVE) {
     return;
   }
-  
+
   $_SESSION['wincachesession']['user'] = gzcompress(serialize($user), 9);
   session_write_close();
-  
+
   if (!drupal_save_session()) {
     // We don't have anything to do if we are not allowed to save the session.
     return;
@@ -160,7 +161,7 @@ function drupal_session_regenerate() {
   // will be preserved.
   unset($_SESSION['wincachesession']);
 
-  // Asign a new session id.
+  // Assign a new session id.
   session_id(wincache_session_id($user->uid));
 
   if (isset($old_session_id)) {
@@ -192,23 +193,23 @@ function drupal_session_destroy_uid($uid) {
   if (!drupal_save_session()) {
     return;
   }
-  
+
   // Store current session.
   if (session_status() == PHP_SESSION_ACTIVE) {
     $current_session = session_id();
     session_write_close();
   }
-  
+
   // In order to destroy we need to load.
   $session_id = wincache_session_id($uid);
   session_id($session_id);
   session_destroy();
-  
+
   if (!empty($current_session)) {
     session_id($current_session);
     session_start();
   }
-  
+
 }
 
 /**
