@@ -126,10 +126,21 @@
  // Tell Drupal what cache types this cache backend
  // should be used with. Wincache should used for non
  // persistent cache storage with low size requirements.
+ // This is a proposal for caches to run in Wincache.
  $conf['cache_class_cache'] = 'DrupalWinCache';
+ $conf['cache_class_fastCache'] = 'DrupalWinCache';
  $conf['cache_class_cache_bootstrap'] = 'DrupalWinCache';
  $conf['cache_class_cache_menu'] = 'DrupalWinCache';
  $conf['cache_class_cache_variable'] = 'DrupalWinCache';
+ $conf['cache_class_cache_locale'] = 'DrupalWinCache';
+ $conf['cache_class_cache_i18n'] = 'DrupalWinCache';
+ $conf['cache_class_cache_metatag'] = 'DrupalWinCache';
+ $conf['cache_class_cache_field'] = 'DrupalWinCache';
+ $conf['cache_class_cache_libraries'] = 'DrupalWinCache';
+ $conf['cache_class_cache_rules'] = 'DrupalWinCache';
+ $conf['cache_class_cache_advagg_aggregates'] = 'DrupalWinCache';
+ $conf['cache_class_cache_advagg_info'] = 'DrupalWinCache';
+ $conf['cache_class_cache_views'] = 'DrupalWinCache';
 
  // If you have a small site then just set wincache as the default backend
  // and forget about memcache.
