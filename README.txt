@@ -88,9 +88,13 @@
  ; in phpinfo() and access the Wincache statistics page, on you first
  ; run you will need to customize the username and password of the
  ; wincache.php access by directly editing the file.
- 
- http://yoursite/sites/all/modules/drupalwincache/misc/wincache.php
- 
+
+ http://yoursite/sites/all/modules/wincachedrupal/misc/wincache.php
+
+ or if you have enabled the wincache module:
+
+ http://yoursite/admin/reports/status/wincache
+
 /*****************
  * 1. Cache Backend (AKA "User Cache")
  ****************/
@@ -103,6 +107,11 @@
  on medium to large sites just use the most frequently accesed caches
  such as bootstrap, menu and/or variable. Maximum documented size for this
  cache is 85Mb but you can go all the way up to 2048Mb without problems.
+ 
+ IMPORTANT: There is a bug in Wincache 1.3.6 when used with PHP 5.6.X where
+ you will have a fatal failure if user cache size is set above 450Mb.
+ 
+ http://forums.iis.net/t/1214439.aspx?Wincache+1+3+6
 
  Adjust the cache size to fit your site, recommended to start with 128Mb.
 
@@ -112,23 +121,22 @@
  
  Copy the drupalwincache module into you site's module folder:
  
- sites/all/modules/drupalwincache/
+ sites/all/modules/wincachedrupal/
  
  In your site's settings.php (sites/default/settings.php): 
  
  // Register the new cache backend
- $conf['cache_backends'][0] = array('sites/all/modules/drupalwincache/drupal_win_cache.inc');
+ $conf['cache_backends'][] = array('sites/all/modules/wincachedrupal/drupal_win_cache.inc');
 
  // If you have more than one cache Backend at the same time, use this:
- $conf['cache_backends'][0] = 'sites/all/modules/memcache/memcache.inc';
- $conf['cache_backends'][1] = 'sites/all/modules/drupalwincache/drupal_win_cache.inc';
+ $conf['cache_backends'][] = 'sites/all/modules/memcache/memcache.inc';
+ $conf['cache_backends'][] = 'sites/all/modules/wincachedrupal/drupal_win_cache.inc';
 
  // Tell Drupal what cache types this cache backend
  // should be used with. Wincache should used for non
  // persistent cache storage with low size requirements.
  // This is a proposal for caches to run in Wincache.
  $conf['cache_class_cache'] = 'DrupalWinCache';
- $conf['cache_class_fastCache'] = 'DrupalWinCache';
  $conf['cache_class_cache_bootstrap'] = 'DrupalWinCache';
  $conf['cache_class_cache_menu'] = 'DrupalWinCache';
  $conf['cache_class_cache_variable'] = 'DrupalWinCache';
@@ -149,6 +157,15 @@
  Once this settings are up and running, navigate you website for the cache
  contents to be warmed up and then visit the Wincache Statistics Page and make
  sure the User Cache is being used by visiting the User Cache tab.
+ 
+ // There are a few caches that must always go
+ // to persistent storage.
+ 
+ # Keep forms in persistent storage.
+ $conf['cache_class_cache_form'] = 'DrupalDatabaseCache';
+
+ # I don't see any point in keeping the module update information in Memcached.
+ $conf['cache_class_cache_update'] = 'DrupalDatabaseCache';
 
 /*****************
  * 2. File system operation storage accelerator 
@@ -187,7 +204,7 @@
  
  To enable use this in php.ini:
  
- wincache.ocenabled=0
+ wincache.ocenabled=1
  
  Make sure to increase the size of the cache to catter your site's needs:
  
@@ -248,7 +265,7 @@
  * 6. Optional - Speed up anonymous page cache
  ****************/
  
- When using DrupalWinCache as default or manually caching the 'cache_page' bin
+ When using wincachedrupal as default or manually caching the 'cache_page' bin
  in your settings file you do not need to start the database because Drupal can
  use the WinCache for pages. Add the following code to your settings.php file
  to do so:
