@@ -91,8 +91,17 @@ class DrupalWinCache implements DrupalCacheInterface {
     // Add a get to our statistics.
     $this->AddStatistic('get', array($cid));
 
+    $success = FALSE;
+
     // Fetch the data.
-    $cache = wincache_ucache_get($this->key($cid));
+    $cache = wincache_ucache_get($this->key($cid), $success);
+
+    // Should return FALSE on failure.
+    if ($success === FALSE) {
+      return FALSE;
+    }
+
+    // Return the prepared item.
     return $this->prepareItem($cache);
   }
 
@@ -157,10 +166,10 @@ class DrupalWinCache implements DrupalCacheInterface {
   public function getMultiple(&$cids) {
     // If requesting no $cids return empty array.
     // Otherwise warnings are triggered.
-    if(empty($cids)) {
+    if (empty($cids)) {
       return array();
     }
-  
+
     // Garbage collection necessary when enforcing a minimum cache lifetime.
     $this->garbageCollection($this->bin);
 
@@ -170,10 +179,13 @@ class DrupalWinCache implements DrupalCacheInterface {
       $keys[$this->key($cid)] = $cid;
     }
 
-    $fetch = wincache_ucache_get(array_keys($keys));
+    $success = FALSE;
+    $fetch = wincache_ucache_get(array_keys($keys), $success);
     $cache = array();
-    foreach ($fetch as $key => $data) {
-      $cache[$keys[$key]] = $this->prepareItem($fetch[$key]);
+    if ($success === TRUE) {
+      foreach ($fetch as $key => $data) {
+        $cache[$keys[$key]] = $this->prepareItem($fetch[$key]);
+      }
     }
 
     unset($fetch);
