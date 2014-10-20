@@ -57,6 +57,13 @@ function drupal_session_initialize() {
 }
 
 /**
+ * Returns whether a session has been started.
+ */
+function drupal_session_started() {
+  return session_status() == PHP_SESSION_ACTIVE;
+}
+
+/**
  * Starts a session forcefully, preserving already set session data.
  *
  * @ingroup php_wrappers
