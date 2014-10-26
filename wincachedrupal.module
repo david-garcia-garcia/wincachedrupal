@@ -15,6 +15,9 @@ function wincachedrupal_init() {
   global $wincache_collect_statistics;
   $wincache_collect_statistics = FALSE;
 
+  // Check usercache usage.
+  register_shutdown_function('wincachedrupal_shutdown_check_ucache');
+
   if (($user->uid == 0) || !variable_get('wincache_show_debug', FALSE)
       || !user_access('access wincache statistics') || strstr($_SERVER['PHP_SELF'], 'update.php')
       || strstr($_GET['q'], 'autocomplete')) {
@@ -61,6 +64,21 @@ function wincachedrupal_permission() {
       'description' => t('Allows access to the statistics reports of WinCache.'),
     ),
   );
+}
+
+/**
+ * Shutdown function to verifiy user cache usage.
+ */
+function wincachedrupal_shutdown_check_ucache() {
+  $user_cache_available = function_exists('wincache_ucache_info') && !strcmp(ini_get('wincache.ucenabled'), "1");
+  if ($user_cache_available) {
+    $ucache_mem_info = wincache_ucache_meminfo();
+    $free_memory_ratio = $ucache_mem_info['memory_free'] / $ucache_mem_info['memory_total'];
+    if ($free_memory_ratio < 0.3) {
+      watchdog('WincacheDrupal', 'Usercache threshold limit reached. Cache cleared.', array(), WATCHDOG_CRITICAL);
+      wincache_ucache_clear();
+    }
+  }
 }
 
 /**
