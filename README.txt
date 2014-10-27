@@ -290,3 +290,18 @@
  and wincache_show_debug is set to true (in settings.php):
  $conf['wincache_show_debug'] = TRUE;
  - Provide a set of tests.
+
+ /*****************
+ * 7. Wincache Lock Mechanism
+ ****************/
+
+  To enable the Wincache based Lock mechanism in settings.php:
+
+  $conf['lock_inc'] = 'sites/all/modules/wincachedrupal/wincache-lock.inc';
+
+  This works over a custom cache binary under the name of 'semaphore'.
+
+  Enabling this locking system will save you a few database hits per request.
+
+  Beware that this locking should only be used on single-server setup because
+  wincache cannot be shared accross servers.
