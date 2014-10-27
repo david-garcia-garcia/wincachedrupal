@@ -161,9 +161,11 @@ function lock_release_all() {
   global $wcache_cache;
   global $locks;
   foreach ($locks as $name => $id) {
-    $value = $wcache_cache->get($name)->data;
-    if ($value == $id) {
-      $wcache_cache->clear($name);
+    if ($cache = $wcache_cache->get($name)) {
+      $value = $cache->data;
+      if ($value == $id) {
+        $wcache_cache->clear($name);
+      }
     }
   }
 }
