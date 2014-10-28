@@ -259,7 +259,18 @@
 
  $conf['session_inc'] = 'sites/all/modules/wincachedrupal/wincachedrupalsession.inc';
 
- This experimental version has not been tested under HTTPS (secure) sites.
+ This version has not been tested under HTTPS (secure) sites.
+
+ IMPORTANT NOTICE: Because of a lack of completeness of the DRUPAL session.inc API
+ all calls to session_destroy() in custom modules or core should be replaced by
+ drupal_session_destroy(). There are just 2 calls to be replaced in Drupal Core.
+
+ If you want to keep the same code base working with and without the wincache session
+ handler enabled just add this dummy method in includes/session.inc:
+
+ function drupal_session_destroy() {
+   session_destroy();
+ }
  
 /*****************
  * 6. Optional - Speed up anonymous page cache
