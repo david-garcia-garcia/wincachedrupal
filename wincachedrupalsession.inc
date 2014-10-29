@@ -147,7 +147,7 @@ function drupal_session_commit() {
     return;
   }
 
-  if (empty($user->uid) && wincachedrupal_session_empty($_SESSION)) {
+  if (empty($user->uid) && (!isset($_SESSION) || wincachedrupal_session_empty($_SESSION))) {
     // There is no session data to store, destroy the session if it was
     // previously started.
     if (drupal_session_started()) {
@@ -186,11 +186,15 @@ function drupal_session_regenerate() {
 
   // Now make sure we destroy current session,
   // this does not clear $_SESSION data.
-  session_destroy();
+  if (drupal_session_started()) {
+    session_destroy();
+  }
 
   // Remove wincache session information, the rest
   // will be preserved.
-  unset($_SESSION['wincachesession']);
+  if (isset($_SESSION)) {
+    unset($_SESSION['wincachesession']);
+  }
 
   // Assign a new session id.
   session_id(wincache_session_id($user->uid));
@@ -231,10 +235,10 @@ function drupal_session_destroy_uid($uid) {
   $scache_info = wincache_scache_info();
   $affected_sessions = array();
   $affected_prefix = wincache_session_id($uid, TRUE);
-  $affected_length = count($affected_prefix);
+  $affected_length = strlen($affected_prefix);
   foreach ($scache_info['scache_entries'] as $sid) {
-  	if (substr($entry['key_name'], 0,$affected_length) == $affected_prefix) {
-      $affected_sessions[] = $entry['key_name'];
+  	if (substr($sid['key_name'], 0, $affected_length) == $affected_prefix) {
+      $affected_sessions[] = $sid['key_name'];
     }
   }
   _wincachedrupal_session_destroy($affected_sessions);
@@ -254,7 +258,9 @@ function _wincachedrupal_session_destroy(array $sids) {
       unset($current_session);
     }
     session_id($sid);
+    session_start();
     session_destroy();
+    session_write_close();
   }
 
   // Restore current user session.
