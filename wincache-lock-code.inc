@@ -39,7 +39,7 @@ function lock_acquire($name, $timeout = 30) {
   if ($wcache_cache->set($name, _lock_id(), $timeout + time())) {
     $locks[$name] = _lock_id();
   }
-  elseif ($result = $wcache_cache->get($name) && isset($locks[$name]) && $locks[$name] == _lock_id()) {
+  elseif (($result = $wcache_cache->get($name)) && isset($locks[$name]) && $locks[$name] == $result) {
     // Only renew the lock if we already set it and it has not expired.
     $wcache_cache->set($name, _lock_id(), $timeout + time());
   }
