@@ -136,9 +136,12 @@ function lock_wait($name, $delay = 30) {
 function lock_release($name) {
   global $wcache_cache;
   global $locks;
-  $wcache_cache->clear($name);
-  // We unset unconditionally since caller assumes lock is released anyway.
-  unset($locks[$name]);
+  $result = $wcache_cache->get($name);
+  if ($result !== FALSE && $result->data == $locks[$name]) {
+    $wcache_cache->clear($name);
+    // We unset unconditionally since caller assumes lock is released anyway.
+    unset($locks[$name]);
+  }
 }
 
 /**
@@ -147,7 +150,7 @@ function lock_release($name) {
 function _lock_id() {
   static $lock_id;
   if (!isset($lock_id)) {
-    $lock_id = uniqid(mt_rand(), TRUE);
+    $lock_id = uniqid((string) mt_rand(), TRUE);
     // We only register a shutdown function if a lock is used.
     register_shutdown_function('lock_release_all', $lock_id);
   }
@@ -157,7 +160,7 @@ function _lock_id() {
 /**
  * Release all locks acquired by this request.
  */
-function lock_release_all() {
+function lock_release_all($lock_id) {
   global $wcache_cache;
   global $locks;
   foreach ($locks as $name => $id) {
