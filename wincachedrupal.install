@@ -34,6 +34,20 @@ function wincachedrupal_requirements($phase) {
   else {
     $requirements['wincache']['description'] = $t('The wincachedrupal module needs the wincache extension see: !link.', array('!link' => l('http://php.net/manual/en/book.wincache.php', '')));
   }
+  
+  // Check for opcache size configuration.
+  if ($phase == 'runtime') {
+    $options = ini_get_all('wincache', true);
+    if ($options['wincache.ocenabled']['local_value'] == 0) {
+      $ocachesize = $options['wincache.ocachesize']['local_value'];
+      $requirements['wincache_oc'] = array(
+        'title' => $t('Wincache opcode cache size'),
+        'value' => $t('Opcode caching is disabled and current cache size is !sizeMb', array('!size' => $ocachesize)),
+        'severity' => ($ocachesize > 15) ? REQUIREMENT_ERROR : REQUIREMENT_OK,
+        'description' => $t('When opcode caching is disabled, reduce memory pressure on the server by setting wincache.ocachesize to the minimum value allowed (15Mb).')
+      );
+    }
+  }
 
   return $requirements;
 }
