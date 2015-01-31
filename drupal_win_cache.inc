@@ -23,7 +23,7 @@ class DrupalWinCache implements DrupalCacheInterface {
   /**
    * The constructor.
    *
-   * @param var $bin
+   * @param string $bin
    *   The bin parameter.
    */
   public function __construct($bin) {
@@ -47,7 +47,7 @@ class DrupalWinCache implements DrupalCacheInterface {
   /**
    * Function which retrieves the safe key for the cache bin.
    *
-   * @return var
+   * @return string
    *   The safe WinCache key.
    */
   protected function binKey() {
@@ -65,10 +65,10 @@ class DrupalWinCache implements DrupalCacheInterface {
   /**
    * Function which retrieves the safe key for the cache cid.
    *
-   * @param var $cid
+   * @param string $cid
    *   The cache id.
    *
-   * @return var
+   * @return string
    *   The safe WinCache key.
    */
   protected function key($cid) {
@@ -78,10 +78,10 @@ class DrupalWinCache implements DrupalCacheInterface {
   /**
    * Function which retrieves a cached item.
    *
-   * @param var $cid
+   * @param string $cid
    *   The cache id.
    *
-   * @return var
+   * @return string
    *   The cached item.
    */
   public function get($cid) {
@@ -111,10 +111,10 @@ class DrupalWinCache implements DrupalCacheInterface {
    * Checks that items are either permanent or did not expire, and unserializes
    * data as appropriate.
    *
-   * @param var $cache
+   * @param string $cache
    *   An item loaded from cache_get() or cache_get_multiple().
    *
-   * @return var
+   * @return string
    *   The item with data unserialized as appropriate or FALSE if there is no
    *   valid item to load.
    */
@@ -175,6 +175,7 @@ class DrupalWinCache implements DrupalCacheInterface {
 
     // We need to search the cache with the proper keys and
     // be able to get the original $cid back.
+    $keys = array();
     foreach ($cids as $cid) {
       $keys[$this->key($cid)] = $cid;
     }
@@ -213,24 +214,28 @@ class DrupalWinCache implements DrupalCacheInterface {
   /**
    * Set an item in the cache.
    *
-   * @param var $cid
+   * @param string $cid
    *   The key of the data to be cached.
-   * @param var $data
+   *
+   * @param string $data
    *   The data to be cached.
-   * @param var $expire
+   *
+   * @param string $expire
    *   The expire mode.
+   *
    * @param array $headers
    *   The headers.
    */
   public function set($cid, $data, $expire = CACHE_PERMANENT, array $headers = NULL) {
     // Add set to statistics.
     $this->AddStatistic('set', array($cid));
-
+    $created_microtime = round(microtime(TRUE), 3);
     // Create new cache object.
     $cache = new stdClass();
     $cache->cid = $cid;
     $cache->serialized = 0;
     $cache->created = REQUEST_TIME;
+    $cache->created_microtime = $created_microtime;
     $cache->expire = $expire;
     $cache->headers = isset($headers) ? serialize($headers) : NULL;
 
@@ -294,9 +299,10 @@ class DrupalWinCache implements DrupalCacheInterface {
   /**
    * Remove an item from the cache.
    *
-   * @param var $cid
+   * @param string $cid
    *   The key of the data to be removed.
-   * @param var $wildcard
+   *
+   * @param string $wildcard
    *   The wildcard.
    */
   public function clear($cid = NULL, $wildcard = FALSE) {
