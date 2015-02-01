@@ -57,7 +57,9 @@
 
  wincache.fcachesize = 255
  wincache.maxfilesize = 2048
- wincache.ocachesize = 255
+ ; If ocenabled = 0, keep ocachesize to the minimum as Wincache
+ ; will reserve the memory anyways.
+ wincache.ocachesize = 15
  wincache.filecount = 8000
  wincache.ttlmax = 2000
  wincache.ucachesize = 85
@@ -126,7 +128,7 @@
  In your site's settings.php (sites/default/settings.php): 
  
  // Register the new cache backend
- $conf['cache_backends'][] = array('sites/all/modules/wincachedrupal/drupal_win_cache.inc');
+ $conf['cache_backends'][] = 'sites/all/modules/wincachedrupal/drupal_win_cache.inc';
 
  // If you have more than one cache Backend at the same time, use this:
  $conf['cache_backends'][] = 'sites/all/modules/memcache/memcache.inc';
@@ -180,11 +182,14 @@
  
  wincache.rerouteini = C:\PHP\reroute.ini
  
+ NOTE: It has not been working since 2010 as per this post: http://forums.iis.net/t/1213205.aspx?Function+reroute+not+working]
+ as of 31/01/2015 Microsoft is actively working on bringing this back, with enhanced performance.
+ 
  If WinCache functions reroutes are enabled it is recommended
  to increase the WinCache file cache size in php.ini:
  
  wincache.fcachesize = 255
- 
+
 /*****************
  * 3. File System Cache + Resolve Path Cache
  ****************/
