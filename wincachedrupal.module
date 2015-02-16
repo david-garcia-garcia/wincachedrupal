@@ -73,9 +73,16 @@ function wincachedrupal_shutdown_check_ucache() {
   $user_cache_available = function_exists('wincache_ucache_info') && !strcmp(ini_get('wincache.ucenabled'), "1");
   if ($user_cache_available) {
     $ucache_mem_info = wincache_ucache_meminfo();
-    $free_memory_ratio = $ucache_mem_info['memory_free'] / $ucache_mem_info['memory_total'];
-    if ($free_memory_ratio < 0.3) {
-      watchdog('WincacheDrupal', 'Usercache threshold limit reached. Cache cleared.', array(), WATCHDOG_CRITICAL);
+    $ucache_available_memory = $ucache_mem_info['memory_total'] - $ucache_mem_info['memory_overhead'];
+    $free_memory_ratio = $ucache_mem_info['memory_free'] / $ucache_available_memory;
+    // If free memory is below 10% of total
+    // do a cache wipe!
+    if ($free_memory_ratio < 0.10) {
+      $params = array();
+      $params["@free"] = round($ucache_mem_info['memory_free'] / 1024, 0);
+      $params["@total"] = round($ucache_mem_info['memory_total'] / 1024, 0);
+      $params["@avail"] = round($ucache_available_memory / 1024, 0);
+      watchdog('WincacheDrupal', 'Usercache threshold limit reached. @free Kb free out of @avail Kb available from a total of @total Kb. Cache cleared.', $params, WATCHDOG_CRITICAL);
       wincache_ucache_clear();
     }
   }
