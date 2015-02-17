@@ -143,7 +143,9 @@ function drupal_session_commit() {
   global $user;
 
   if (!drupal_save_session()) {
-    // We don't have anything to do if we are not allowed to save the session.
+    // We need to explicitly tell the underlying handler not to store
+    // session changes in current request.
+    session_abort();
     return;
   }
 
