@@ -1,22 +1,25 @@
 <?php
 
 /**
- * @file
- * Installation file for the WinCacheDrupal module.
+ * This module offers Wincache support for Drupal, including
+ * statistics gathering and cache usage control.
  */
 
 /**
  * Implements hook_init().
  *
- * Used for displaying the WinCache stats for debug purposes.
+ * Used for displaying the WinCache stats for debug purposes. We need to start collecting these
+ * stats as soon as possible.
  */
 function wincachedrupal_init() {
   global $user;
   global $wincache_collect_statistics;
   $wincache_collect_statistics = FALSE;
 
-  // Check usercache usage.
+  // Check usercache usage, do that on all requests, but never on parallel!
   register_shutdown_function('wincachedrupal_shutdown_check_ucache');
+  
+  $is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
 
   if (($user->uid == 0) || !variable_get('wincache_show_debug', FALSE)
       || !user_access('access wincache statistics') || strstr($_SERVER['PHP_SELF'], 'update.php')
@@ -68,6 +71,10 @@ function wincachedrupal_permission() {
 
 /**
  * Shutdown function to verifiy user cache usage.
+ *
+ * If you run out of User cache in Wincache, the application
+ * will start loosing performance at the speed of light.
+ *
  */
 function wincachedrupal_shutdown_check_ucache() {
   $user_cache_available = function_exists('wincache_ucache_info') && !strcmp(ini_get('wincache.ucenabled'), "1");

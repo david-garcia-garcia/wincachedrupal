@@ -28,6 +28,30 @@ class DrupalWinCache implements DrupalCacheInterface {
    */
   public function __construct($bin) {
     $this->bin = $bin;
+    
+    // If page_cache_without_database is enabled, we have to manually load the
+    // $conf array out of cache_bootstrap.
+    static $variables_loaded = FALSE;
+    // NOTE: We don't call drupal_get_bootstrap_phase() because this would
+    // break all 7.x Drupal installations prior to 7.33. For more information
+    // see https://www.drupal.org/node/667098.
+    if (!$variables_loaded && drupal_bootstrap(NULL, FALSE) < DRUPAL_BOOTSTRAP_VARIABLES) {
+      global $conf;
+      $variables_loaded = TRUE;
+      // Try loading variables from cache. If that fails, we have to bootstrap
+      // further in order to fetch them.
+      if ($cached = cache_get('variables', 'cache_bootstrap')) {
+        $variables = $cached->data;
+        // Make sure variable overrides are applied, see variable_initialize().
+        foreach ($conf as $name => $value) {
+          $variables[$name] = $value;
+        }
+        $conf = $variables;
+      }
+      else {
+        drupal_bootstrap(DRUPAL_BOOTSTRAP_VARIABLES, FALSE);
+      }
+    }
   }
 
   /**
@@ -51,15 +75,19 @@ class DrupalWinCache implements DrupalCacheInterface {
    *   The safe WinCache key.
    */
   protected function binKey() {
-    static $binkey = array();
-
-    $test_info = &$GLOBALS['drupal_test_info'];
-    $bin = (!empty($test_info['test_run_id']) ? ('_' . $test_info['test_run_id']) : '') . $this->bin;
-
-    if (!isset($binkey[$bin])) {
-      $binkey[$bin] = $_SERVER['HTTP_HOST'] . '|' . $bin . '|';
+    // This method used to generate a key depending on $SERVER['HOST']
+    // but was refactored to align it to Memcache behaviour.
+    // @see https://www.drupal.org/node/2426825
+    $prefix = '';
+    if ($prefix = variable_get('wincache_key_prefix', '')) {
+      $prefix .= '|';
     }
-    return $binkey[$bin];
+    // When simpletest is running, emulate the simpletest database prefix here
+    // to avoid the child site setting cache entries in the parent site.
+    if (isset($GLOBALS['drupal_test_info']['test_run_id'])) {
+      $prefix .= $GLOBALS['drupal_test_info']['test_run_id'];
+    }
+    return $prefix . $this->bin . '|';
   }
 
   /**
@@ -271,6 +299,73 @@ class DrupalWinCache implements DrupalCacheInterface {
         // of wincache.
         $timeout = (int) max($expire - time(), 1);
         $set_result = wincache_ucache_set(
+            $this->key($cid),
+            $cache,
+            $timeout
+        );
+        break;
+    }
+    return $set_result;
+  }
+  
+  /**
+   * Adds a variable in user cache only if variable does not already exist in the cache.
+   *
+   * @param string $cid
+   *   The key of the data to be cached.
+   *
+   * @param string $data
+   *   The data to be cached.
+   *
+   * @param string $expire
+   *   The expire mode.
+   *
+   * @param array $headers
+   *   The headers.
+   */
+  public function add($cid, $data, $expire = CACHE_PERMANENT, array $headers = NULL) {
+    // Add set to statistics.
+    $this->AddStatistic('add', array($cid));
+    $created_microtime = round(microtime(TRUE), 3);
+    // Create new cache object.
+    $cache = new stdClass();
+    $cache->cid = $cid;
+    $cache->serialized = 0;
+    $cache->created = REQUEST_TIME;
+    $cache->created_microtime = $created_microtime;
+    $cache->expire = $expire;
+    $cache->headers = isset($headers) ? serialize($headers) : NULL;
+
+    if (is_object($data)) {
+      $cache->serialized = 1;
+      $cache->data = serialize($data);
+    }
+    else {
+      $cache->data = $data;
+    }
+
+    // What kind of expiration is being used.
+    switch ($expire) {
+      case CACHE_PERMANENT:
+        $set_result = wincache_ucache_add($this->key($cid), $cache);
+        break;
+      case CACHE_TEMPORARY:
+        if (variable_get('cache_lifetime', 0) > 0) {
+          $set_result = @wincache_ucache_add(
+              $this->key($cid),
+              $cache,
+              variable_get('cache_lifetime', 0)
+          );
+        }
+        else {
+          $set_result = @wincache_ucache_add($this->key($cid), $cache);
+        }
+        break;
+      default:
+        // Ensure that timeout is more than 0, this is a limitation
+        // of wincache.
+        $timeout = (int) max($expire - time(), 1);
+        $set_result = @wincache_ucache_add(
             $this->key($cid),
             $cache,
             $timeout
