@@ -36,7 +36,8 @@ class WinCacheDrupalTestCase extends DrupalWebTestCase  {
    *
    * @param string $message
    *   Message to display.
-   * @param var $cid
+   *
+   * @param string $cid
    *   The cache id.
    */
   public function assertWinCacheRemoved($message, $cid = NULL) {
@@ -57,9 +58,10 @@ class WinCacheDrupalTestCase extends DrupalWebTestCase  {
   /**
    * Check whether or not a WinCache entry exists.
    *
-   * @param var $cid
+   * @param string $cid
    *   The WinCache id.
-   * @param var $var
+   *
+   * @param string $var
    *   The variable the cache should contain.
    *
    * @return bool
@@ -75,9 +77,11 @@ class WinCacheDrupalTestCase extends DrupalWebTestCase  {
    *
    * @param string $message
    *   Message to display.
-   * @param var $var
+   *
+   * @param string $var
    *   The variable the WinCache should contain.
-   * @param var $cid
+   *
+   * @param string $cid
    *   The cache id.
    */
   protected function assertWinCacheExists($message, $var = NULL, $cid = NULL) {
@@ -95,7 +99,7 @@ class WinCacheDrupalTestCase extends DrupalWebTestCase  {
   /**
    * Setup the lifetime settings for caching.
    *
-   * @param var $time
+   * @param int $time
    *   The time in seconds the cache should minimal live.
    */
   protected function setupLifetime($time = 30) {
@@ -265,6 +269,8 @@ class WinCacheDrupalClearCase extends WinCacheDrupalTestCase {
     $this->winCacheObj = new DrupalWinCache($this->defaultbin);
   }
 
+  
+  
   /**
    * Test clearing using a cid.
    */
@@ -296,14 +302,12 @@ class WinCacheDrupalClearCase extends WinCacheDrupalTestCase {
     $this->assertFalse($this->checkWinCacheExists('test_cid_clear1', $this->defaultvalue)
                       || $this->checkWinCacheExists('test_cid_clear2', $this->defaultvalue),
                       t('Two caches removed after clearing cid "*" with wildcard true.'));
-
     $this->winCacheObj->set('test_cid_clear1', $this->defaultvalue, CACHE_TEMPORARY);
     $this->winCacheObj->set('test_cid_clear2', $this->defaultvalue, CACHE_TEMPORARY);
     $this->assertTrue($this->checkWinCacheExists('test_cid_clear1', $this->defaultvalue)
                       && $this->checkWinCacheExists('test_cid_clear2', $this->defaultvalue),
                       t('Two caches were created for checking cid substring with wildcard true.'));
-    $this->winCacheObj->clear('test_cid_clear1');
-    $this->winCacheObj->clear('test_cid_clear2');
+    $this->winCacheObj->clear('test_cid_clear', TRUE);
     $this->assertFalse($this->checkWinCacheExists('test_cid_clear1', $this->defaultvalue)
                       || $this->checkWinCacheExists('test_cid_clear2', $this->defaultvalue),
                       t('Two caches removed after clearing cid substring with wildcard true.'));
