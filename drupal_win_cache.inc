@@ -176,7 +176,7 @@ class DrupalWinCache implements DrupalCacheInterface {
     minimum cache lifetime always return the cached data.
      */
     if ($cache->expire != CACHE_PERMANENT && $this->variable_get('cache_lifetime', 0) &&
-        (isset($user->cache) && $user->cache > $cache->created)) {
+        (isset($user->cache[$this->binKey()]) && $user->cache[$this->binKey()] > $cache->created_microtime)) {
       // This cache data is too old and thus not valid for us, ignore it.
       return FALSE;
     }
@@ -411,7 +411,10 @@ class DrupalWinCache implements DrupalCacheInterface {
         // will be saved into the sessions bin by _drupal_session_write(). We
         // then simulate that the cache was flushed for this user by not
         // returning cached data that was cached before the timestamp.
-        $user->cache = REQUEST_TIME;
+        if (empty($user->cache)) {
+          $user->cache = array();
+        }
+        $user->cache[$this->binKey()] = round(microtime(TRUE), 3);
 
         $cache_flush = $this->variable_get('cache_flush_' . $this->bin, 0);
         if ($cache_flush == 0) {
