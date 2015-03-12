@@ -18,6 +18,12 @@ $wincache_statistics = array();
  * and backwards compatibility.
  */
 class DrupalWinCache implements DrupalCacheInterface {
+
+  /**
+   * Name of current binary
+   *
+   * @var mixed
+   */
   protected $bin;
 
   /**
@@ -63,7 +69,7 @@ class DrupalWinCache implements DrupalCacheInterface {
     // WincacheDrupal module.
     // We might be collecting statistics prior to hook_init in all requests
     // but that is the only way to get them.
-    if (!($wincache_collect_statistics == FALSE)) {
+    if ($wincache_collect_statistics === TRUE) {
       $GLOBALS['wincache_statistics'][] = array($method, $this->bin, $keys, $wildcard);
     }
   }
@@ -79,7 +85,7 @@ class DrupalWinCache implements DrupalCacheInterface {
     // but was refactored to align it to Memcache behaviour.
     // @see https://www.drupal.org/node/2426825
     $prefix = '';
-    if ($prefix = variable_get('wincache_key_prefix', '')) {
+    if ($prefix = $this->variable_get('wincache_key_prefix', '')) {
       $prefix .= '|';
     }
     // When simpletest is running, emulate the simpletest database prefix here
@@ -114,7 +120,7 @@ class DrupalWinCache implements DrupalCacheInterface {
    */
   public function get($cid) {
     // Garbage collection necessary when enforcing a minimum cache lifetime.
-    $this->garbageCollection($this->bin);
+    $this->garbageCollection();
 
     // Add a get to our statistics.
     $this->AddStatistic('get', array($cid));
@@ -139,7 +145,7 @@ class DrupalWinCache implements DrupalCacheInterface {
    * Checks that items are either permanent or did not expire, and unserializes
    * data as appropriate.
    *
-   * @param string $cache
+   * @param mixed $cache
    *   An item loaded from cache_get() or cache_get_multiple().
    *
    * @return string
@@ -154,7 +160,7 @@ class DrupalWinCache implements DrupalCacheInterface {
     }
     // If the data is permanent or we are not enforcing a minimum cache lifetime
     // always return the cached data.
-    if ($cache->expire == CACHE_PERMANENT || !variable_get('cache_lifetime', 0)) {
+    if ($cache->expire == CACHE_PERMANENT || !$this->variable_get('cache_lifetime', 0)) {
       if ($cache->serialized) {
         $cache->data = unserialize($cache->data);
       }
@@ -169,7 +175,7 @@ class DrupalWinCache implements DrupalCacheInterface {
     in session.inc. If the data is permanent or we're not enforcing a
     minimum cache lifetime always return the cached data.
      */
-    if ($cache->expire != CACHE_PERMANENT && variable_get('cache_lifetime', 0) &&
+    if ($cache->expire != CACHE_PERMANENT && $this->variable_get('cache_lifetime', 0) &&
         (isset($user->cache) && $user->cache > $cache->created)) {
       // This cache data is too old and thus not valid for us, ignore it.
       return FALSE;
@@ -199,7 +205,7 @@ class DrupalWinCache implements DrupalCacheInterface {
     }
 
     // Garbage collection necessary when enforcing a minimum cache lifetime.
-    $this->garbageCollection($this->bin);
+    $this->garbageCollection();
 
     // We need to search the cache with the proper keys and
     // be able to get the original $cid back.
@@ -213,7 +219,10 @@ class DrupalWinCache implements DrupalCacheInterface {
     $cache = array();
     if ($success === TRUE) {
       foreach ($fetch as $key => $data) {
-        $cache[$keys[$key]] = $this->prepareItem($fetch[$key]);
+        // Prepare item can return false if the item has expired.
+        if($item = $this->prepareItem($fetch[$key])) {
+          $cache[$keys[$key]] = $item;
+        }
       }
     }
 
@@ -229,11 +238,11 @@ class DrupalWinCache implements DrupalCacheInterface {
    */
   protected function garbageCollection() {
     // Garbage collection necessary when enforcing a minimum cache lifetime.
-    $cache_flush = variable_get('cache_flush_' . $this->bin, 0);
-    if ($cache_flush && ($cache_flush + variable_get('cache_lifetime', 0) <= REQUEST_TIME)) {
+    $cache_flush = $this->variable_get('cache_flush_' . $this->bin, 0);
+    if ($cache_flush && ($cache_flush + $this->variable_get('cache_lifetime', 0) <= REQUEST_TIME)) {
       // Reset the variable immediately to prevent a meltdown in
       // heavy load situations.
-      variable_set('cache_flush_' . $this->bin, 0);
+      $this->variable_set('cache_flush_' . $this->bin, 0);
       // Time to flush old cache data.
       $this->clearTemporary();
     }
@@ -282,27 +291,14 @@ class DrupalWinCache implements DrupalCacheInterface {
         break;
 
       case CACHE_TEMPORARY:
-        if (variable_get('cache_lifetime', 0) > 0) {
-          $set_result = wincache_ucache_set(
-              $this->key($cid),
-              $cache,
-              variable_get('cache_lifetime', 0)
-          );
-        }
-        else {
-          $set_result = wincache_ucache_set($this->key($cid), $cache);
-        }
+        $cache_lifetime = $this->variable_get('cache_lifetime', 0);
+        $set_result = wincache_ucache_set($this->key($cid), $cache, $cache_lifetime);
         break;
 
       default:
-        // Ensure that timeout is more than 1, this is a limitation
-        // of wincache.
+        // Ensure that timeout is at least 1 s.
         $timeout = (int) max($expire - time(), 1);
-        $set_result = wincache_ucache_set(
-            $this->key($cid),
-            $cache,
-            $timeout
-        );
+        $set_result = wincache_ucache_set($this->key($cid), $cache, $timeout);
         break;
     }
     return $set_result;
@@ -347,48 +343,51 @@ class DrupalWinCache implements DrupalCacheInterface {
     // What kind of expiration is being used.
     switch ($expire) {
       case CACHE_PERMANENT:
-        $set_result = wincache_ucache_add($this->key($cid), $cache);
+        $set_result = @wincache_ucache_add($this->key($cid), $cache);
         break;
       case CACHE_TEMPORARY:
-        if (variable_get('cache_lifetime', 0) > 0) {
-          $set_result = @wincache_ucache_add(
-              $this->key($cid),
-              $cache,
-              variable_get('cache_lifetime', 0)
-          );
-        }
-        else {
-          $set_result = @wincache_ucache_add($this->key($cid), $cache);
-        }
+        $cache_lifetime = $this->variable_get('cache_lifetime', 0);
+        $set_result = @wincache_ucache_add($this->key($cid), $cache, $cache_lifetime);
         break;
       default:
-        // Ensure that timeout is more than 0, this is a limitation
-        // of wincache.
+        // Ensure that timeout is at least 1 s.
         $timeout = (int) max($expire - time(), 1);
-        $set_result = @wincache_ucache_add(
-            $this->key($cid),
-            $cache,
-            $timeout
-        );
+        $set_result = @wincache_ucache_add($this->key($cid), $cache, $timeout);
         break;
     }
     return $set_result;
   }
 
   /**
-   * Clear cached item in temporary cached mode.
+   * Clear all cache items that were stored
+   * using the CACHE_TEMPORARY mode.
    */
   public function clearTemporary() {
+    // This can be slow with big caches, prevent race.
+    $binkey = $this->binKey();
+    if ((!$this->lockInit()) || lock_acquire('wincache_clear_temporary_' . $binkey) === FALSE) {
+      return;
+    }
+    // Retrieve list of all cached items.
     $data = wincache_ucache_info();
     $count = count($data['ucache_entries']);
-    for ($i = 1; $i <= $count; $i++) {
-      if (strpos($data['ucache_entries'][$i]['key_name'], $this->binKey()) === 0) {
-        $cache = wincache_ucache_get($data['ucache_entries'][$i]['key_name']);
+    $keys = array();
+    for($i = 1; $i <= $count; $i++) {
+      $key = $data['ucache_entries'][$i]['key_name'];
+      if (strpos($key, $binkey) === 0) {
+        $cache = wincache_ucache_get($key);
         if ($cache && $cache->expire == CACHE_TEMPORARY) {
-          wincache_ucache_delete($data['ucache_entries'][$i]['key_name']);
+          $keys[] = $key;
         }
       }
     }
+    // Only bother wincache if something is to be cleared.
+    if (!empty($keys)) {
+      wincache_ucache_delete($keys);
+    }
+    lock_release('wincache_clear_temporary_' . $binkey);
+    // TODO: Probably nice to log something on failure, including
+    // the list of failing cache keys.
   }
 
   /**
@@ -407,23 +406,23 @@ class DrupalWinCache implements DrupalCacheInterface {
     $this->AddStatistic('clear', $cid, (int) $wildcard);
 
     if (empty($cid)) {
-      if (variable_get('cache_lifetime', 0)) {
+      if ($this->variable_get('cache_lifetime', 0)) {
         // We store the time in the current user's $user->cache variable which
         // will be saved into the sessions bin by _drupal_session_write(). We
         // then simulate that the cache was flushed for this user by not
         // returning cached data that was cached before the timestamp.
         $user->cache = REQUEST_TIME;
 
-        $cache_flush = variable_get('cache_flush_' . $this->bin, 0);
+        $cache_flush = $this->variable_get('cache_flush_' . $this->bin, 0);
         if ($cache_flush == 0) {
           // This is the first request to clear the cache, start a timer.
-          variable_set('cache_flush_' . $this->bin, REQUEST_TIME);
+          $this->variable_set('cache_flush_' . $this->bin, REQUEST_TIME);
         }
-        elseif (REQUEST_TIME > ($cache_flush + variable_get('cache_lifetime', 0))) {
+        elseif (REQUEST_TIME > ($cache_flush + $this->variable_get('cache_lifetime', 0))) {
           // Clear the cache for everyone, cache_lifetime seconds have
           // passed since the first request to clear the cache.
           $this->clearTemporary();
-          variable_set('cache_flush_' . $this->bin, 0);
+          $this->variable_set('cache_flush_' . $this->bin, 0);
         }
       }
       else {
@@ -432,32 +431,36 @@ class DrupalWinCache implements DrupalCacheInterface {
     }
     else {
       if ($wildcard) {
-
+        $keys = array();
         $data = wincache_ucache_info();
         $count = count($data['ucache_entries']);
         if ($cid == '*') {
           for ($i = 1; $i <= $count; $i++) {
-            if (strpos($data['ucache_entries'][$i]['key_name'], $this->binKey()) === 0) {
-              wincache_ucache_delete($data['ucache_entries'][$i]['key_name']);
+            $key = $data['ucache_entries'][$i]['key_name'];
+            if (strpos($key, $this->binKey()) === 0) {
+              $keys[] = $key;
             }
           }
         }
         else {
           for ($i = 1; $i <= $count; $i++) {
-            if (strpos($data['ucache_entries'][$i]['key_name'], $this->binKey() . $cid) === 0) {
-              wincache_ucache_delete($data['ucache_entries'][$i]['key_name']);
+            $key = $data['ucache_entries'][$i]['key_name'];
+            if (strpos($key, $this->key($cid)) === 0) {
+              $keys[] = $key;
             }
           }
         }
       }
       elseif (is_array($cid)) {
         foreach ($cid as $delete_cid) {
-          wincache_ucache_delete($this->key($delete_cid));
+          $keys[] = $this->key($delete_cid);
         }
       }
       else {
-        wincache_ucache_delete($this->key($cid));
+        $keys[] = $this->key($cid);
       }
+      // Delete all items at once.
+      wincache_ucache_delete($keys);
     }
   }
 
@@ -477,4 +480,76 @@ class DrupalWinCache implements DrupalCacheInterface {
     }
     return TRUE;
   }
+  
+  /**
+   * variable_get wrapper.
+   */
+  private function variable_get($name, $default = NULL) {
+    return variable_get($name, $default);
+  }
+  
+  /**
+   * Re-implementation of variable_set() that writes through instead of clearing.
+   *
+   * Taken from memcache.inc
+   */
+  private function variable_set($name, $value) {
+    global $conf;
+    
+    // We need to have at least bootstrapped up to Database.
+    if (drupal_bootstrap(NULL, FALSE) < DRUPAL_BOOTSTRAP_DATABASE) {
+      drupal_bootstrap(DRUPAL_BOOTSTRAP_DATABASE, FALSE);
+    }
+
+    // When lots of writes happen in a short period of time db_merge can throw
+    // errors. This should only happen if another request has written the variable
+    // first, so we catch the error to prevent a fatal error.
+    try {
+      db_merge('variable')
+        ->key(array('name' => $name))
+        ->fields(array('value' => serialize($value)))
+        ->execute();
+    }
+    catch (Exception $e) {
+      // We can safely ignore the error, since it's likely a cache flush timestamp
+      // which should still be accurate.
+    }
+
+    // If the variables are cached, get a fresh copy, update with the new value
+    // and set it again.
+    if ($cached = cache_get('variables', 'cache_bootstrap')) {
+      $variables = $cached->data;
+      $variables[$name] = $value;
+      cache_set('variables', $variables, 'cache_bootstrap');
+    }
+    // If the variables aren't cached, there's no need to do anything.
+    $conf[$name] = $value;
+  }
+  
+  /**
+   * Helper function to load locking framework if not already loaded.
+   *
+   * Taken from memache.inc
+   *
+   * @return bool
+   *   Whether the locking system was initialized successfully. This must always
+   *   return TRUE or throw an exception.
+   */
+  public function lockInit() {
+    // On a cache miss when page_cache_without_database is enabled, we can end
+    // up here without the lock system being initialized. Bootstrap drupal far
+    // enough to load the lock system.
+    if (!function_exists('lock_acquire')) {
+      drupal_bootstrap(DRUPAL_BOOTSTRAP_VARIABLES, FALSE);
+    }
+
+    if (!function_exists('lock_acquire')) {
+      // Bootstrap failed, log error.
+      register_shutdown_function('watchdog', 'memcache', 'Bootstrap failed in lockInit(), lock_acquire() is not available. (phase:!phase)', array('!phase' => drupal_get_bootstrap_phase()), WATCHDOG_ERROR);
+      return FALSE;
+    }
+
+    return TRUE;
+  }
+  
 }
