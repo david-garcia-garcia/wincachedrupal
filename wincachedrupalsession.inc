@@ -16,11 +16,12 @@ function wincache_session_id($uid, $onlyprefix = FALSE) {
   if (empty($uid)) {
     $uid = '0';
   }
-  $prefix = 'wc_sess_' . $uid . '_';
+  $prefix = 'wc-sess-' . $uid . '-';
   if ($onlyprefix) {
     return $prefix;
   }
-  return $prefix . drupal_random_key();
+  // A valid session id may consists of digits, letters A to Z (both upper and lower case), comma and dash. Described as a character class, it would be [-,a-zA-Z0-9].
+  return $prefix . uniqid();
 }
 
 /**
