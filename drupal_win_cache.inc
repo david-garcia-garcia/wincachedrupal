@@ -20,6 +20,34 @@ $wincache_statistics = array();
 class DrupalWinCache implements DrupalCacheInterface {
 
   /**
+   * Test info is loaded at database bootstrap phase
+   * but this cache can be used earlier. Make sure
+   * we have a valid test prefix before any operation on
+   * the cache is performed.
+   *
+   * @var string
+   */
+  private static $test_run_id;
+  
+  /**
+   * Add test prefix to current binary key.
+   *
+   * @param string $prefix 
+   */
+  private static function AddTestPrefix(&$prefix) {
+    // Try with the "official" test_run_id first.
+    if (isset($GLOBALS['drupal_test_info']['test_run_id'])) {
+      $prefix .= $GLOBALS['drupal_test_info']['test_run_id'];
+      return;
+    }
+    // Try with the locally detected version.
+    if (isset(static::$test_run_id)) {
+      $prefix .= static::$test_run_id;
+      return;
+    }
+  }
+
+  /**
    * Name of current binary
    *
    * @var mixed
@@ -42,6 +70,14 @@ class DrupalWinCache implements DrupalCacheInterface {
     // break all 7.x Drupal installations prior to 7.33. For more information
     // see https://www.drupal.org/node/667098.
     if (!$variables_loaded && drupal_bootstrap(NULL, FALSE) < DRUPAL_BOOTSTRAP_VARIABLES) {
+      // This cache can be used so early in the bootstrap that even testing environment has
+      // not been initialized yet.... do so now otherwise caches between test environment
+      // and regular environment can get mixed up.
+      if ($test_prefix = drupal_valid_test_ua()) {
+        // Keep a local copy of the current test_prefix.
+        static::$test_run_id = $test_prefix;
+      }
+      // Now time to load the variables.
       global $conf;
       $variables_loaded = TRUE;
       // Try loading variables from cache. If that fails, we have to bootstrap
@@ -89,10 +125,8 @@ class DrupalWinCache implements DrupalCacheInterface {
       $prefix .= '|';
     }
     // When simpletest is running, emulate the simpletest database prefix here
-    // to avoid the child site setting cache entries in the parent site.
-    if (isset($GLOBALS['drupal_test_info']['test_run_id'])) {
-      $prefix .= $GLOBALS['drupal_test_info']['test_run_id'];
-    }
+    // to avoid the child site setting cache entries in the parent site (or the other way round).
+    static::AddTestPrefix($prefix);
     return $prefix . $this->bin . '|';
   }
 
