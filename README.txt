@@ -57,9 +57,7 @@
 
  wincache.fcachesize = 255
  wincache.maxfilesize = 2048
- ; If ocenabled = 0, keep ocachesize to the minimum as Wincache
- ; will reserve the memory anyways.
- wincache.ocachesize = 15
+ wincache.ocachesize = 255
  wincache.filecount = 8000
  wincache.ttlmax = 2000
  wincache.ucachesize = 85
@@ -178,18 +176,19 @@
  functions that may improve performance of PHP applications in 
  cases when PHP has to access files on network shares.
  
- To enable this function routing, change your php.ini:
+ Prior to Wincache 1.3.7.0 rerouting was broken.
+ http://forums.iis.net/t/1213205.aspx?Function+reroute+not+working]
  
- wincache.rerouteini = C:\PHP\reroute.ini
+ After that version, file rerouting functions are enabled by default, to disable
+ them use:
  
- NOTE: It has not been working since 2010 as per this post: http://forums.iis.net/t/1213205.aspx?Function+reroute+not+working]
- as of 31/01/2015 Microsoft is actively working on bringing this back, with enhanced performance.
+ wincache.reroute_enabled=0
  
  If WinCache functions reroutes are enabled it is recommended
  to increase the WinCache file cache size in php.ini:
  
  wincache.fcachesize = 255
-
+ 
 /*****************
  * 3. File System Cache + Resolve Path Cache
  ****************/
@@ -262,20 +261,9 @@
  EXPERIMENTAL: There is an experimental implementation of the wincache session
  handler for Drupal. Besides all the previous configuration, in your settings.php:
 
- $conf['session_inc'] = 'sites/all/modules/wincachedrupal/wincachedrupalsession.inc';
+ $conf['session_inc'] = 'sites/all/modules/wincachedrupal/wincache-session.inc';
 
  This version has not been tested under HTTPS (secure) sites.
-
- IMPORTANT NOTICE: Because of a lack of completeness of the DRUPAL session.inc API
- all calls to session_destroy() in custom modules or core should be replaced by
- drupal_session_destroy(). There are just 2 calls to be replaced in Drupal Core.
-
- If you want to keep the same code base working with and without the wincache session
- handler enabled just add this dummy method in includes/session.inc:
-
- function drupal_session_destroy() {
-   session_destroy();
- }
  
 /*****************
  * 6. Optional - Speed up anonymous page cache
