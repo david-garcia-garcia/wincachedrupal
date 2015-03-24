@@ -92,7 +92,7 @@ class WinCacheDrupalTestCase extends DrupalWebTestCase  {
    * Assert WinCache instance is enabled or not.
    */
   public function assertWinCacheInstance() {
-    $wincacheenabled = (function_exists('WinCache_ucache_info') && ($cache = @WinCache_ucache_info()));
+    $wincacheenabled = (function_exists('WinCache_ucache_info') && ($cache = @wincache_ucache_info(TRUE)));
     $this->assertTrue($wincacheenabled, t('WinCache is enabled.'));
   }
 

@@ -14,7 +14,7 @@ function wincachedrupal_requirements($phase) {
   $t = get_t();
 
   // Test WinCache.
-  $wincache_enabled = (function_exists('wincache_ucache_info') && ($cache = @wincache_ucache_info()));
+  $wincache_enabled = (function_exists('wincache_ucache_info') && ($cache = @wincache_ucache_info(TRUE)));
 
   $wincache_version = phpversion('wincache');
   $requirements['wincache'] = array(
