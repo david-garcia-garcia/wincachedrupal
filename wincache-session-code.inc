@@ -264,8 +264,8 @@ class WincacheSessionHandler extends SessionHandler {
     }
 
     // Otherwise read session.
-    $session = @json_decode(parent::read($session_id));
-    if ($session !== NULL) {
+    $session = @unserialize(parent::read($session_id));
+    if ($session !== FALSE) {
       // After the session handler upgrade, trying to unserialize
       // a previous session will not work.
       $user = $session->user;
@@ -338,7 +338,7 @@ class WincacheSessionHandler extends SessionHandler {
       // Use json_encode/json_decode to be
       // on the safe side here.
       // Do not pass untrusted user input to unserialize()
-      $res = parent::write($session_id, json_encode($session));
+      $res = parent::write($session_id, serialize($session));
     }
 
     // Likewise, do not update access time more than once per 180 seconds.
