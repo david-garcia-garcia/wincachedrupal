@@ -17,7 +17,7 @@ $wincache_session_enabled = (function_exists('wincache_ucache_info') && ($cache 
 $phpver_ok = version_compare(PHP_VERSION, '5.4.0') >= 0;
 
 // If something is wrong, back to the default session handler.
-if (!$wincache_session_enabled || !$phpver_ok) {
+if (!$wincache_session_enabled || !$phpver_ok || drupal_is_cli()) {
   $session_file = DRUPAL_ROOT . '/includes/session.inc';
   ini_set('session.save_handler', 'files');
 }
