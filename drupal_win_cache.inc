@@ -209,10 +209,12 @@ class DrupalWinCache implements DrupalCacheInterface {
     in session.inc. If the data is permanent or we're not enforcing a
     minimum cache lifetime always return the cached data.
      */
-    if ($cache->expire != CACHE_PERMANENT && $this->variable_get('cache_lifetime', 0) &&
-        (isset($user->cache[$this->binKey()]) && $user->cache[$this->binKey()] > $cache->created_microtime)) {
-      // This cache data is too old and thus not valid for us, ignore it.
-      return FALSE;
+    // $user can be NULL if trying to access a cache item before session has been bootstraped.
+    if ($cache->expire != CACHE_PERMANENT && $this->variable_get('cache_lifetime', 0) && $user) {
+      if(isset($_SESSION['cache_expiration'][$this->binKey()]) && $_SESSION['cache_expiration'][$this->binKey()] > $cache->created_microtime) {
+        // This cache data is too old and thus not valid for us, ignore it.
+        return FALSE;
+      }
     }
 
     if (isset($cache->headers)) {
@@ -445,10 +447,12 @@ class DrupalWinCache implements DrupalCacheInterface {
         // will be saved into the sessions bin by _drupal_session_write(). We
         // then simulate that the cache was flushed for this user by not
         // returning cached data that was cached before the timestamp.
-        if (empty($user->cache)) {
-          $user->cache = array();
+        // Eliminate $user->cache and {session}.cache in favor of
+        // $_SESSION['cache_expiration'][$bin] (Performance).
+        if(empty($_SESSION['cache_expiration'])) {
+          $_SESSION['cache_expiration'] = array();
         }
-        $user->cache[$this->binKey()] = round(microtime(TRUE), 3);
+        $_SESSION['cache_expiration'][$this->binKey()] = round(microtime(TRUE), 3);
 
         $cache_flush = $this->variable_get('cache_flush_' . $this->bin, 0);
         if ($cache_flush == 0) {
