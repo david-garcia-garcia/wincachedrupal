@@ -471,24 +471,21 @@ class DrupalWinCache implements DrupalCacheInterface {
       }
     }
     else {
+      $keys = array();
       if ($wildcard) {
-        $keys = array();
         $data = wincache_ucache_info();
         $count = count($data['ucache_entries']);
+        $prefix = NULL;
         if ($cid == '*') {
-          for ($i = 1; $i <= $count; $i++) {
-            $key = $data['ucache_entries'][$i]['key_name'];
-            if (strpos($key, $this->binKey()) === 0) {
-              $keys[] = $key;
-            }
-          }
+          $prefix = $this->binKey();
         }
         else {
-          for ($i = 1; $i <= $count; $i++) {
-            $key = $data['ucache_entries'][$i]['key_name'];
-            if (strpos($key, $this->key($cid)) === 0) {
-              $keys[] = $key;
-            }
+          $prefix = $this->key($cid);
+        }
+        for ($i = 1; $i <= $count; $i++) {
+          $key = $data['ucache_entries'][$i]['key_name'];
+          if (strpos($key, $prefix) === 0) {
+            $keys[] = $key;
           }
         }
       }
