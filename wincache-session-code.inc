@@ -323,6 +323,17 @@ class WincacheSessionHandler extends SessionHandler {
 
     $res = TRUE;
     
+    // Likewise, do not update access time more than once per 180 seconds.
+    if ($user->uid && REQUEST_TIME - $user->access > variable_get('session_write_interval', 180)) {
+      db_update('users')
+        ->fields(array(
+          'access' => REQUEST_TIME
+        ))
+        ->condition('uid', $user->uid)
+        ->execute();
+      $user->access = REQUEST_TIME;
+    }
+    
     // For performance reasons, do not update the sessions table, unless
     // $_SESSION has changed or more than 180 has passed since the last update.
     if ($is_changed || !isset($user->timestamp) || REQUEST_TIME - $user->timestamp > variable_get('session_write_interval', 180)) {
@@ -339,16 +350,6 @@ class WincacheSessionHandler extends SessionHandler {
       // on the safe side here.
       // Do not pass untrusted user input to unserialize()
       $res = parent::write($session_id, serialize($session));
-    }
-
-    // Likewise, do not update access time more than once per 180 seconds.
-    if ($user->uid && REQUEST_TIME - $user->access > variable_get('session_write_interval', 180)) {
-      db_update('users')
-        ->fields(array(
-          'access' => REQUEST_TIME
-        ))
-        ->condition('uid', $user->uid)
-        ->execute();
     }
 
     return $res;
