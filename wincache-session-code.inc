@@ -332,6 +332,8 @@ class WincacheSessionHandler extends SessionHandler {
         ->condition('uid', $user->uid)
         ->execute();
       $user->access = REQUEST_TIME;
+      // Make user the changes to $user->access are stored.
+      $is_changed = TRUE;
     }
     
     // For performance reasons, do not update the sessions table, unless
