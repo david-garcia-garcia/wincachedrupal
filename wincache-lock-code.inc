@@ -12,8 +12,7 @@
 // Use the $WINCACHE_LOCK_ACTIVE global
 // to tell other modules if this is the
 // active locking backend.
-global $WINCACHE_LOCK_ACTIVE;
-$WINCACHE_LOCK_ACTIVE = TRUE;
+$GLOBALS['WINCACHE_LOCK_ACTIVE'] = TRUE;
  
 /**
  * Initialize the locking system.

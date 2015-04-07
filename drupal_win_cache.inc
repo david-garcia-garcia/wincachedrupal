@@ -375,7 +375,7 @@ class DrupalWinCache implements DrupalCacheInterface {
     else {
       $cache->data = $data;
     }
-
+    set_error_handler(function() { /* Prevent Drupal from logging any exceptions or warning thrown here */ }, E_ALL);
     // What kind of expiration is being used.
     switch ($expire) {
       case CACHE_PERMANENT:
@@ -391,6 +391,7 @@ class DrupalWinCache implements DrupalCacheInterface {
         $set_result = @wincache_ucache_add($this->key($cid), $cache, $timeout);
         break;
     }
+    restore_error_handler();
     return $set_result;
   }
 

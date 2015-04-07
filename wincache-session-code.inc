@@ -4,6 +4,11 @@
  * @file
  * User session handling functions.
  */
+ 
+// Use the $WINCACHE_SESSION_ACTIVE global
+// to tell other modules if this is the
+// active locking backend.
+$GLOBALS['WINCACHE_SESSION_ACTIVE'] = TRUE;
 
 /**
  * Initializes the session handler, starting a session if needed.
@@ -269,8 +274,15 @@ class WincacheSessionHandler extends SessionHandler {
       // After the session handler upgrade, trying to unserialize
       // a previous session will not work.
       $user = $session->user;
+
+      // Store the session that was read for comparison in write().
+      $last_read = &drupal_static('drupal_session_last_read');
+      $last_read = array(
+        'sid' => $session_id,
+        'value' => $session->session,
+      );
     }
-    
+
     // We found the client's session record and they are an authenticated,
     // active user.
     if ($user && $user->uid > 0 && $user->status == 1) {
@@ -296,14 +308,14 @@ class WincacheSessionHandler extends SessionHandler {
       $user->session = '';
     }
 
-    // Store the session that was read for comparison in write().
-    $last_read = &drupal_static('drupal_session_last_read');
-    $last_read = array(
-      'sid' => $session_id,
-      'value' => $session->session,
-    );
-    
-    return $session->session;
+    // If we could obtain a stored session, return
+    // the actual session data.
+    if ($session !== FALSE) {
+      return $session->session;
+    }
+
+    // No session data.
+    return NULL;
   }
   
   /**
@@ -402,6 +414,5 @@ function _drupal_session_delete_cookie($name) {
 }
 
 // Initialize the storage
-ini_set('session.save_handler', 'wincache');
 $handler = new WincacheSessionHandler();
 session_set_save_handler($handler, true);

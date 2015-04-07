@@ -46,7 +46,7 @@ function wincachedrupal_requirements($phase) {
     if (version_compare($wincache_version, '1.3.7.2', '<')) {
       if ($options['wincache.ocenabled']['local_value'] == 0) {
         $ocachesize = $options['wincache.ocachesize']['local_value'];
-        $requirements['wincache_oc'] = array(
+        $requirements['wincache_oc_size'] = array(
           'title' => $t('Wincache opcode cache size'),
           'value' => $t('Opcode caching is disabled and current cache size is !sizeMb', array('!size' => $ocachesize)),
           'severity' => ($ocachesize > 15) ? REQUIREMENT_ERROR : REQUIREMENT_OK,
@@ -59,14 +59,29 @@ function wincachedrupal_requirements($phase) {
 	  // Probably yes, because this is the WincacheDriver!
     $is_windows = strncasecmp(PHP_OS, 'WIN', 3) == 0;
     if ($is_windows) {
-      // Make sure that they are using Wincache OPCODE cache.
-      if ($options['wincache.ocenabled']['local_value'] == 0) {
-        $requirements['wincache_oc'] = array(
-          'title' => $t('Wincache Opcode Cache'),
-          'value' => $t('The Wincache OPCODE cache should be enabled. Do not rely on ZEND_OPCACHE, it is unstable on windows platforms.'),
-          'severity' => REQUIREMENT_ERROR,
-        );
-      }
+      // Make sure that we are using Wincache OPCODE cache.
+      $opcode_ok = $options['wincache.ocenabled']['local_value'] == 1;
+      $opcode_info = wincache_ocache_meminfo();
+      $requirements['wincache_oc'] = array(
+        'title' => $t('Wincache Opcode cache'),
+        'value' => $opcode_ok ? $t('Opcode cache is being handled by Wincache.') : $t('The Wincache Opcode cache should be enabled. Do not rely on ZEND_OPCACHE, it is unstable on windows platforms.'),
+        'severity' => $opcode_ok ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+      );
+      // Check that session is provided by Wincache.
+      $session_ok = isset($GLOBALS['WINCACHE_SESSION_ACTIVE']) && $GLOBALS['WINCACHE_SESSION_ACTIVE'] == TRUE;
+      $session_info = wincache_scache_info(TRUE);
+      $requirements['wincache_session'] = array(
+        'title' => $t('Wincache Session backend'),
+        'value' => $session_ok ? $t('Session storage is handled by Wincache. Storing :count sessions.', array(':count' => $session_info['total_item_count'])) : $t('Session storage is not handled by Wincache.'),
+        'severity' => $session_ok ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+      );
+      // Check that locking is provided by Wincache.
+      $lock_ok = isset($GLOBALS['WINCACHE_LOCK_ACTIVE']) && $GLOBALS['WINCACHE_LOCK_ACTIVE'] == TRUE;
+      $requirements['wincache_lock'] = array(
+        'title' => $t('Wincache Locking backend'),
+        'value' => $lock_ok ? $t('Locks are being managed by Wincache.') : $t('Locks are not being managed by Wincache.'),
+        'severity' => $lock_ok ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+      );
     }
   }
 

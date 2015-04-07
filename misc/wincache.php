@@ -208,7 +208,7 @@ if (isset($_GET['key']))
 
 // Initialize global variables.
 $user_cache_available = function_exists('wincache_ucache_info') && !strcmp(ini_get('wincache.ucenabled'), "1");
-$session_cache_available = function_exists('wincache_scache_info') && !strcasecmp(ini_get('session.save_handler'), "wincache");
+$session_cache_available = function_exists('wincache_scache_info') && (!strcasecmp(ini_get('session.save_handler'), "wincache") || (isset($GLOBALS['WINCACHE_SESSION_ACTIVE']) && $GLOBALS['WINCACHE_SESSION_ACTIVE'] == TRUE));
 $ocache_mem_info = NULL;
 $ocache_file_info = NULL;
 $ocache_summary_info = NULL;
