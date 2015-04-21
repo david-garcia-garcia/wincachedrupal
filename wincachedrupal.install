@@ -82,6 +82,21 @@ function wincachedrupal_requirements($phase) {
         'value' => $lock_ok ? $t('Locks are being managed by Wincache.') : $t('Locks are not being managed by Wincache.'),
         'severity' => $lock_ok ? REQUIREMENT_OK : REQUIREMENT_WARNING,
       );
+      
+      //  Why is there a wincache.apppoolid setting?
+      //  A: For debugging purposes only.  It should never be explicitly set in production environments.
+      //  Q: Has WinCache been tested with custom application pool identities?  e.g. NetworkService, LocalSystem, LocalService, or "Custom account" in the App Pool | Advanced Settings | Application Pool Identity dialog of inetmgr.exe
+      //  A: No, it has not.  It's very possible that it won't work for anything other than ApplicationPoolIdentity.
+      //  Q: What happens when wincache.apppoolid is not set?
+      //  A: When IIS launches php-cgi.exe, it adds an environment variable (APP_POOL_ID), and that's what wincache will use if the apppoolid setting is not set.  The variable will contain the account name under the IIS APPPOOL domain to use for the app pool. 
+      $apppool_ok = empty($options['wincache.apppoolid']['local_value']);
+      if (!$apppool_ok) {
+        $requirements['wincache_apppoolid'] = array(
+          'title' => $t('Wincache wincache.apppoolid ini setting'),
+          'value' =>  $t('wincache.apppoolid should never be used in production environments!'),
+          'severity' => REQUIREMENT_WARNING,
+        );
+      }
     }
   }
 
