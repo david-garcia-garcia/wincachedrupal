@@ -269,11 +269,13 @@ class WincacheSessionHandler extends SessionHandler {
     }
 
     // Otherwise read session.
-    $session = @unserialize(parent::read($session_id));
+    $data = parent::read($session_id);
+    $session = @unserialize($data);
     if ($session !== FALSE) {
       // After the session handler upgrade, trying to unserialize
       // a previous session will not work.
       $user = $session->user;
+      $user->timestamp = $session->timestamp;
 
       // Store the session that was read for comparison in write().
       $last_read = &drupal_static('drupal_session_last_read');
@@ -336,7 +338,7 @@ class WincacheSessionHandler extends SessionHandler {
     $res = TRUE;
     
     // Likewise, do not update access time more than once per 180 seconds.
-    if ($user->uid && REQUEST_TIME - $user->access > variable_get('session_write_interval', 180)) {
+    if ($user->uid && REQUEST_TIME - $user->access > variable_get('session_write_interval', 240)) {
       db_update('users')
         ->fields(array(
           'access' => REQUEST_TIME
@@ -349,8 +351,10 @@ class WincacheSessionHandler extends SessionHandler {
     }
     
     // For performance reasons, do not update the sessions table, unless
-    // $_SESSION has changed or more than 180 has passed since the last update.
-    if ($is_changed || !isset($user->timestamp) || REQUEST_TIME - $user->timestamp > variable_get('session_write_interval', 180)) {
+    // $_SESSION has changed or more than 240 has passed since the last update.
+    // We add an additional 5 seconds to the timestamp check to prevent a double session
+    // save on expiration.
+    if ($is_changed || !isset($user->timestamp) || REQUEST_TIME - $user->timestamp > (variable_get('session_write_interval', 240) + 5)) {
       // Prepare the information to be saved.
       $session = new stdClass();
       $session->sid = $session_id;
@@ -359,11 +363,12 @@ class WincacheSessionHandler extends SessionHandler {
       $session->hostname = ip_address();
       $session->session = $session_data;
       $session->timestamp = REQUEST_TIME;
-      $session->user = $user;
+      $session->user = clone $user;
       // Use json_encode/json_decode to be
       // on the safe side here.
       // Do not pass untrusted user input to unserialize()
-      $res = parent::write($session_id, serialize($session));
+      $data = serialize($session);
+      $res = parent::write($session_id, $data);
     }
 
     return $res;
