@@ -273,14 +273,20 @@ class DrupalWinCache implements DrupalCacheInterface {
    * Garbage collection for get and getMultiple methods.
    */
   protected function garbageCollection() {
+    // We need a flag to prevent garbage collection from being
+    // called during garbage collection itself for the same binary.
+    static $running = array();
     // Garbage collection necessary when enforcing a minimum cache lifetime.
     $cache_flush = $this->variable_get('cache_flush_' . $this->bin, 0);
-    if ($cache_flush && ($cache_flush + $this->variable_get('cache_lifetime', 0) <= REQUEST_TIME)) {
+    if (!isset($running[$this->bin]) && $cache_flush && ($cache_flush + $this->variable_get('cache_lifetime', 0) <= REQUEST_TIME)) {
+      $running[$this->bin] = TRUE;
       // Reset the variable immediately to prevent a meltdown in
-      // heavy load situations.
+      // heavy load situations. If we are clearing the variables
+      // binary then doing a variable set will trigger and endless loop.
       $this->variable_set('cache_flush_' . $this->bin, 0);
       // Time to flush old cache data.
       $this->clearTemporary();
+      unset($running[$this->bin]);
     }
   }
 
