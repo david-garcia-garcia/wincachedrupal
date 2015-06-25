@@ -142,7 +142,7 @@ function lock_release($name) {
   global $wcache_cache;
   global $locks;
   $result = $wcache_cache->get($name);
-  if ($result !== FALSE && $result->data == $locks[$name]) {
+  if (isset($locks[$name]) && $result !== FALSE && $result->data == $locks[$name]) {
     $wcache_cache->clear($name);
     // We unset unconditionally since caller assumes lock is released anyway.
     unset($locks[$name]);
