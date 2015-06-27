@@ -413,15 +413,13 @@ class DrupalWinCache implements DrupalCacheInterface {
     }
     // Retrieve list of all cached items.
     $data = wincache_ucache_info();
-    $count = count($data['ucache_entries']);
     $keys = array();
-    for($i = 1; $i <= $count; $i++) {
-      $key = $data['ucache_entries'][$i]['key_name'];
-      if (strpos($key, $binkey) === 0) {
-        $cache = wincache_ucache_get($key);
-        if ($cache && $cache->expire == CACHE_TEMPORARY) {
-          $keys[] = $key;
-        }
+    $items = array_column($data['ucache_entries'], 'key_name');
+    $matches = preg_grep('/^' . preg_quote($binkey) . '/', $items);
+    foreach($matches as $key) {
+      $cache = wincache_ucache_get($key);
+      if ($cache && $cache->expire == CACHE_TEMPORARY) {
+        $keys[] = $key;
       }
     }
     // Only bother wincache if something is to be cleared.
@@ -481,7 +479,6 @@ class DrupalWinCache implements DrupalCacheInterface {
       $keys = array();
       if ($wildcard) {
         $data = wincache_ucache_info();
-        $count = count($data['ucache_entries']);
         $prefix = NULL;
         if ($cid == '*') {
           $prefix = $this->binKey();
@@ -489,12 +486,8 @@ class DrupalWinCache implements DrupalCacheInterface {
         else {
           $prefix = $this->key($cid);
         }
-        for ($i = 1; $i <= $count; $i++) {
-          $key = $data['ucache_entries'][$i]['key_name'];
-          if (strpos($key, $prefix) === 0) {
-            $keys[] = $key;
-          }
-        }
+        $k = array_column($data['ucache_entries'], 'key_name');
+        $keys = preg_grep('/^' . preg_quote($prefix) . '/', $k);
       }
       elseif (is_array($cid)) {
         foreach ($cid as $delete_cid) {
@@ -517,13 +510,9 @@ class DrupalWinCache implements DrupalCacheInterface {
    */
   public function isEmpty() {
     $data = wincache_ucache_info();
-    $count = count($data['ucache_entries']);
-    for ($i = 1; $i <= $count; $i++) {
-      if (strpos($data['ucache_entries'][$i]['key_name'], $this->binKey()) === 0) {
-        return FALSE;
-      }
-    }
-    return TRUE;
+    $items = array_column($data['ucache_entries'], 'key_name');
+    $matches = preg_grep('/^' . preg_quote($this->binKey()) . '/', $items);
+    return empty($matches);
   }
   
   /**
