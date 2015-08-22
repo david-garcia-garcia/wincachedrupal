@@ -5,6 +5,9 @@
  * This integrates the drupal WinCache backend.
  */
 
+ // array_column support for old PHP versions
+require_once 'array_column.inc';
+
 // Array to collect usage statistics.
 $wincache_statistics = array();
 
