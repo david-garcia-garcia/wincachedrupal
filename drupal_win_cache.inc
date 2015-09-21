@@ -189,9 +189,10 @@ class DrupalWinCache implements DrupalCacheInterface {
   protected function prepareItem($cache) {
     global $user;
 
-    if (!isset($cache->data)) {
+    if (!property_exists($cache, 'data')) {
       return FALSE;
     }
+
     // If the data is permanent or we are not enforcing a minimum cache lifetime
     // always return the cached data.
     if ($cache->expire == CACHE_PERMANENT || !$this->variable_get('cache_lifetime', 0)) {

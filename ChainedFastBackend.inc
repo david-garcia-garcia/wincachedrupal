@@ -63,24 +63,37 @@ class ChainedFastBackend implements DrupalCacheInterface {
   /**
    * The time at which the last write to this cache bin happened.
    *
-   * @var float
+   * @var float|null
    */
   protected $lastWriteTimestamp;
+
+  /**
+   * If this should assume that the system is running
+   * on single web head mode.
+   * 
+   * @var mixed
+   */
+  protected $single = FALSE;
 
   /**
    * Constructs a ChainedFastBackend object.
    *
    * @param DrupalCacheInterface $consistent_backend
    *   The consistent cache backend.
+   *   
    * @param DrupalCacheInterface $fast_backend
    *   The fast cache backend.
+   *   
    * @param string $bin
    *   The cache bin for which the object is created.
    */
   public function __construct($bin) {
     global $conf;
+
     $this->consistentBackend = new $conf['consistentBackend']($bin);
     $this->fastBackend = new $conf['fastBackend']($bin);
+    $this->single = isset($conf['chainedFastBackendSingle']) ? $conf['chainedFastBackendSingle'] : FALSE;
+
     $this->bin = 'cache_' . $bin;
     $this->lastWriteTimestamp = NULL;
   }
@@ -108,7 +121,7 @@ class ChainedFastBackend implements DrupalCacheInterface {
     // anything in the fast backend is valid, so don't even bother fetching
     // from there.
     $last_write_timestamp = $this->getLastWriteTimestamp();
-    if ($last_write_timestamp) {
+    if ($last_write_timestamp || $this->single) {
       // Items in the fast backend might be invalid based on their timestamp,
       // but we can't check the timestamp prior to getting the item, which
       // includes unserializing it. However, unserializing an invalid item can
@@ -165,12 +178,8 @@ class ChainedFastBackend implements DrupalCacheInterface {
    * {@inheritdoc}
    */
   public function set($cid, $data, $expire = Cache::PERMANENT) {
-    // Only mark as outdated if the item alrady exists in the consisten
-    // backend cache.
-    if ($this->fastBackend->get($cid) || $this->consistentBackend->get($cid)) {
-      $this->markAsOutdated();
-    }
     $this->consistentBackend->set($cid, $data, $expire);
+    $this->markAsOutdated();
     $this->fastBackend->set($cid, $data, $expire);
   }
 
@@ -200,21 +209,21 @@ class ChainedFastBackend implements DrupalCacheInterface {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function garbageCollection() {
-    $this->consistentBackend->garbageCollection();
-    $this->fastBackend->garbageCollection();
-  }
-
-  /**
    * Gets the last write timestamp.
    */
   protected function getLastWriteTimestamp() {
+
+    // In single web head mode fake
+    // as if this has just been written.
+    if ($this->single) {
+      return 0;
+    }
+
     if ($this->lastWriteTimestamp === NULL) {
       $cache = $this->consistentBackend->get(self::LAST_WRITE_TIMESTAMP_PREFIX . $this->bin);
       $this->lastWriteTimestamp = $cache ? $cache->data : 0;
     }
+
     return $this->lastWriteTimestamp;
   }
 
@@ -222,6 +231,13 @@ class ChainedFastBackend implements DrupalCacheInterface {
    * Marks the fast cache bin as outdated because of a write.
    */
   protected function markAsOutdated() {
+
+    // Single web head setups
+    // should not outdate anything...
+    if ($this->single) {
+      return;
+    }
+
     // Clocks on a single server can drift. Multiple servers may have slightly
     // differing opinions about the current time. Given that, do not assume
     // 'now' on this server is always later than our stored timestamp.
@@ -234,6 +250,7 @@ class ChainedFastBackend implements DrupalCacheInterface {
       $this->lastWriteTimestamp = $now;
       $this->consistentBackend->set(self::LAST_WRITE_TIMESTAMP_PREFIX . $this->bin, $this->lastWriteTimestamp);
     }
+
   }
 
 }
