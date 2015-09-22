@@ -5,9 +5,6 @@
  * This integrates the drupal WinCache backend.
  */
 
-// Array to collect usage statistics.
-$wincache_statistics = array();
-
 /**
  * Win cache implementation.
  *
@@ -95,20 +92,6 @@ class DrupalWinCache implements DrupalCacheInterface {
       }
     }
   }
-
-  /**
-   * Manage statistics.
-   */
-  protected function AddStatistic($method, $keys, $wildcard = NULL) {
-    global $wincache_collect_statistics;
-    // $wincache_collect_statistics is set during hook_init in
-    // WincacheDrupal module.
-    // We might be collecting statistics prior to hook_init in all requests
-    // but that is the only way to get them.
-    if ($wincache_collect_statistics === TRUE) {
-      $GLOBALS['wincache_statistics'][] = array($method, $this->bin, $keys, $wildcard);
-    }
-  }
   
   /**
    * Function which retrieves the safe key for the cache bin.
@@ -155,9 +138,6 @@ class DrupalWinCache implements DrupalCacheInterface {
   public function get($cid) {
     // Garbage collection necessary when enforcing a minimum cache lifetime.
     $this->garbageCollection();
-
-    // Add a get to our statistics.
-    $this->AddStatistic('get', array($cid));
 
     $success = FALSE;
 
@@ -264,8 +244,6 @@ class DrupalWinCache implements DrupalCacheInterface {
     }
 
     unset($fetch);
-    // Add a get to our statistics.
-    $this->AddStatistic('getMultiple', $cids);
     $cids = array_diff($cids, array_keys($cache));
     return $cache;
   }
@@ -307,8 +285,7 @@ class DrupalWinCache implements DrupalCacheInterface {
    *   The headers.
    */
   public function set($cid, $data, $expire = CACHE_PERMANENT, array $headers = NULL) {
-    // Add set to statistics.
-    $this->AddStatistic('set', array($cid));
+
     $created_microtime = round(microtime(TRUE), 3);
     // Create new cache object.
     $cache = new stdClass();
@@ -363,8 +340,6 @@ class DrupalWinCache implements DrupalCacheInterface {
    *   The headers.
    */
   public function add($cid, $data, $expire = CACHE_PERMANENT, array $headers = NULL) {
-    // Add set to statistics.
-    $this->AddStatistic('add', array($cid));
     $created_microtime = round(microtime(TRUE), 3);
     // Create new cache object.
     $cache = new stdClass();
@@ -443,9 +418,6 @@ class DrupalWinCache implements DrupalCacheInterface {
    */
   public function clear($cid = NULL, $wildcard = FALSE) {
     global $user;
-
-    // Add a get to our statistics.
-    $this->AddStatistic('clear', $cid, (int) $wildcard);
 
     if (empty($cid)) {
       if ($this->variable_get('cache_lifetime', 0)) {
