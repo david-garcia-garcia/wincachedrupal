@@ -304,6 +304,9 @@ class ChainedFastBackend implements DrupalCacheInterface {
    */
   public function __destruct()  {
     if ($this->persistOnShutdown && $this->last_invalidation != NULL) {
+      // Persistent backend usually rely on high levels of bootstrap
+      // memcache up to Variables and database up to database
+      drupal_bootstrap(DRUPAL_BOOTSTRAP_DATABASE);
       $this->doMarkAsOutdated($this->last_invalidation);
     }
   }

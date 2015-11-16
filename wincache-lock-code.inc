@@ -21,6 +21,7 @@ function lock_initialize() {
   global $locks;
   global $wcache_cache;
   if (!isset($wcache_cache)) {
+    
     $wcache_cache = new DrupalWinCache('semaphore');
     $locks = array();
   }
@@ -139,14 +140,15 @@ function lock_wait($name, $delay = 30) {
  *   The name of the lock.
  */
 function lock_release($name) {
+  lock_initialize();
   global $wcache_cache;
   global $locks;
   $result = $wcache_cache->get($name);
   if (isset($locks[$name]) && $result !== FALSE && $result->data == $locks[$name]) {
     $wcache_cache->clear($name);
-    // We unset unconditionally since caller assumes lock is released anyway.
-    unset($locks[$name]);
   }
+  // We unset unconditionally since caller assumes lock is released anyway.
+  unset($locks[$name]);
 }
 
 /**
