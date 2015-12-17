@@ -76,14 +76,14 @@ class ChainedFastBackend implements DrupalCacheInterface {
 
   /**
    * Defer persisting to the end of the request.
-   * 
+   *
    * @var int
    */
   protected $last_invalidation = NULL;
 
   /**
    * Persist on shutdown.
-   * 
+   *
    * @var bool
    */
   protected $persistOnShutdown = NULL;
@@ -95,6 +95,8 @@ class ChainedFastBackend implements DrupalCacheInterface {
    * @return string
    */
   protected function GetHeadId() {
+    // The headID is specific to a combination of Bin and Head
+    // because the fastBackend instance here is already bin aware.
     if ($cache = $this->fastBackend->get('headid')) {
       return $cache->data;
     }
@@ -110,10 +112,10 @@ class ChainedFastBackend implements DrupalCacheInterface {
    *
    * @param DrupalCacheInterface $consistent_backend
    *   The consistent cache backend.
-   *   
+   *
    * @param DrupalCacheInterface $fast_backend
    *   The fast cache backend.
-   *   
+   *
    * @param string $bin
    *   The cache bin for which the object is created.
    */
@@ -254,6 +256,14 @@ class ChainedFastBackend implements DrupalCacheInterface {
         $this->lastWriteTimestamp = $cache->data['timestamp'];
       }
       else {
+        // If this was a cache miss we need to inmediately write something to the persistent cache
+        // because backends such as memcache with stampeede protection enabled will
+        // issue a lock now that lasts until this is writen! We should not worry about marking
+        // this as updated because if it was a cache miss, the whole binary whould be empty.
+        if ($cache === FALSE) {
+          $this->lastWriteTimestamp = 0;
+          $this->markAsOutdated(TRUE);
+        }
         // If we are here this means that either the binary has never been invalidated,
         // or that the last invalidation was actually made by ourselves so we retain
         // the previous invalidation timestamp that we had.
@@ -269,7 +279,7 @@ class ChainedFastBackend implements DrupalCacheInterface {
   /**
    * Marks the fast cache bin as outdated because of a write.
    */
-  protected function markAsOutdated() {
+  protected function markAsOutdated($force = FALSE) {
     // Clocks on a single server can drift. Multiple servers may have slightly
     // differing opinions about the current time. Given that, do not assume
     // 'now' on this server is always later than our stored timestamp.
@@ -278,7 +288,10 @@ class ChainedFastBackend implements DrupalCacheInterface {
     // the same millisecond and are then incorrectly invalidated, but that only
     // costs one additional roundtrip to the persistent cache.
     $now = round(microtime(TRUE) + .001, 3);
-    if ($now > $this->getLastWriteTimestamp()) {
+    if ($force) {
+      $this->doMarkAsOutdated($now);
+    }
+    elseif ($now > $this->getLastWriteTimestamp()) {
       if ($this->persistOnShutdown) {
         $this->last_invalidation = $now;
       }
@@ -291,8 +304,8 @@ class ChainedFastBackend implements DrupalCacheInterface {
 
   /**
    * Does the actual marking as updated!
-   * 
-   * @param int $now 
+   *
+   * @param int $now
    */
   protected function doMarkAsOutdated($now) {
     $this->fastBackend->set(self::LAST_WRITE_TIMESTAMP_PREFIX . $this->bin, $this->lastWriteTimestamp);
