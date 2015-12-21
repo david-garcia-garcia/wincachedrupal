@@ -6,7 +6,7 @@ use Drupal\Core\DependencyInjection\ServiceModifierInterface;
 use Drupal\Core\DependencyInjection\ServiceProviderInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 
-class WincacheServiceProvider implements ServiceProviderInterface {
+class WincacheDrupalServiceProvider implements ServiceProviderInterface {
   /**
    * {@inheritdoc}
    */

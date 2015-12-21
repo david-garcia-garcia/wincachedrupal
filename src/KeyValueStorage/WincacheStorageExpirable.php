@@ -14,7 +14,7 @@ use Drupal\Core\Database\Query\Merge;
 use Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface;
 use Drupal\Core\KeyValueStore\DatabaseStorageExpirable;
 
-use Drupal\wincachedrupal\Cache\wincachedrupalBackend;
+use Drupal\wincachedrupal\Cache\WincacheBackend;
 
 /**
  * Defines a default key/value store implementation for expiring items.

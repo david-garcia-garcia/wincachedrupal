@@ -13,7 +13,7 @@ class Installer {
 
     // Test WinCache.
     $wincache_ucache_enabled = (function_exists('wincache_ucache_info') && ($cache = @wincache_ucache_info(TRUE)));
-    
+
     $wincache_version = phpversion('wincache');
     $requirements['wincache'] = array(
       'title' => $this->t('WinCache version'),
@@ -72,14 +72,18 @@ class Installer {
       // Probably yes, because this is the WincacheDriver!
       $is_windows = strncasecmp(PHP_OS, 'WIN', 3) == 0;
       if ($is_windows) {
-        // Make sure that we are using Wincache OPCODE cache.
-        $opcode_ok = $options['wincache.ocenabled']['local_value'] == 1;
-        $opcode_info = wincache_ocache_meminfo();
-        $requirements['wincache_oc'] = array(
-          'title' => $this->t('Wincache Opcode cache'),
-          'value' => $opcode_ok ? $this->t('Opcode cache is being handled by Wincache.') : $this->t('The Wincache Opcode cache should be enabled. Do not rely on ZEND_OPCACHE, it is unstable on windows platforms.'),
-          'severity' => $opcode_ok ? REQUIREMENT_OK : REQUIREMENT_ERROR,
-        );
+        // Since Wincache 2.0 wincache_ocache_meminfo does
+        // not exist anymore.
+        if (function_exists('wincache_ocache_meminfo')) {
+          // Make sure that we are using Wincache OPCODE cache.
+          $opcode_ok = $options['wincache.ocenabled']['local_value'] == 1;
+          $opcode_info = wincache_ocache_meminfo();
+          $requirements['wincache_oc'] = array(
+            'title' => $this->t('Wincache Opcode cache'),
+            'value' => $opcode_ok ? $this->t('Opcode cache is being handled by Wincache.') : $this->t('The Wincache Opcode cache should be enabled. Do not rely on ZEND_OPCACHE, it is unstable on windows platforms.'),
+            'severity' => $opcode_ok ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+          );
+        }
 
         //  Why is there a wincache.apppoolid setting?
         //  A: For debugging purposes only.  It should never be explicitly set in production environments.

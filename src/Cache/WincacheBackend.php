@@ -101,7 +101,7 @@ class WincacheBackend implements CacheBackendInterface {
     $success = FALSE;
     $result = wincache_ucache_get(array_keys($map), $success);
     $cache = array();
-    if ($success === TRUE) {
+    if ($success == TRUE) {
       foreach ($result as $key => $item) {
         $item = $this->prepareItem($item, $allow_invalid);
         if ($item) {
@@ -212,7 +212,7 @@ class WincacheBackend implements CacheBackendInterface {
     // in which case the value will persist until it's removed from the cache or
     // until the next cache clear, restart, etc. This is what we want to do
     // when $expire equals CacheBackendInterface::CACHE_PERMANENT.
-    if ($expire === CacheBackendInterface::CACHE_PERMANENT) {
+    if ($expire == CacheBackendInterface::CACHE_PERMANENT) {
       wincache_ucache_set($this->getBinKey($cid), $cache);
     }
     else {
@@ -239,7 +239,7 @@ class WincacheBackend implements CacheBackendInterface {
     // when $expire equals CacheBackendInterface::CACHE_PERMANENT.
     set_error_handler(function() { /* Prevent Drupal from logging any exceptions or warning thrown here */ }, E_ALL);
     $set_result = TRUE;
-    if ($expire === CacheBackendInterface::CACHE_PERMANENT) {
+    if ($expire == CacheBackendInterface::CACHE_PERMANENT) {
       $set_result = @wincache_ucache_add($this->getBinKey($cid), $cache);
     }
     else {

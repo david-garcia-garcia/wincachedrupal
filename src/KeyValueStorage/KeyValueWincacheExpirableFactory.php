@@ -15,7 +15,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface;
 
 /**
- * Defines the key/value store factory for the database backend.
+ * Defines the key/value store factory for the wincache/databse backend.
  */
 class KeyValueWincacheExpirableFactory implements KeyValueExpirableFactoryInterface {
 
