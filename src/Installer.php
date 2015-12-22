@@ -19,7 +19,7 @@ class Installer {
       'title' => $this->t('WinCache version'),
       'value' => $wincache_ucache_enabled ? $wincache_version : $this->t('Not available'),
       'severity' => $wincache_ucache_enabled ? REQUIREMENT_OK : REQUIREMENT_ERROR,
-      'description' => $wincache_ucache_enabled ? NULL : $this->t('The wincachedrupal module needs the wincache extension see: !link.', array('!link' => l('http://php.net/manual/en/book.wincache.php', '')))
+      'description' => $wincache_ucache_enabled ? NULL : $this->t('The wincachedrupal module needs the wincache extension see: @link.', array('@link' => l('http://php.net/manual/en/book.wincache.php', '')))
     );
 
     if ($wincache_ucache_enabled) {
@@ -31,25 +31,26 @@ class Installer {
 
       $requirements['wincache_ucache'] = array(
         'title' => $this->t('WinCache user cache'),
-        'value' => $this->t('Enabled. Memory total: !total. Used !used%.', array(
-          '!total' => format_size($ucache_meminfo['memory_total']),
-          '!used' => round(100 - (($ucache_meminfo['memory_free'] / $ucache_meminfo['memory_total']) * 100), 2),
+        'value' => $this->t('Enabled. Memory total: @total. Used @used%.', array(
+          '@total' => format_size($ucache_meminfo['memory_total']),
+          '@used' => round(100 - (($ucache_meminfo['memory_free'] / $ucache_meminfo['memory_total']) * 100), 2),
         )),
         'severity' => $wincache_ucache_enabled ? REQUIREMENT_OK : REQUIREMENT_ERROR,
       );
 
 
-      $requirements['wincache_ucache']['description'] = $this->t('WinCache has been running for !duration. Currently caching !num_entries entries. Hit rate !hitrate%.',
+      $requirements['wincache_ucache']['description'] = $this->t('WinCache has been running for @duration. Currently caching @num_entries entries. Hit rate @hitrate%.',
         array(
-          '!duration' => $formatter->formatInterval($cache['total_cache_uptime']),
-          '!num_entries' => $cache['total_item_count'],
-          '!hitrate' => round(($cache['total_hit_count'] / ($cache['total_hit_count'] + $cache['total_miss_count'])) * 100, 2) ,
+          '@duration' => $formatter->formatInterval($cache['total_cache_uptime']),
+          '@num_entries' => $cache['total_item_count'],
+          '@hitrate' => round(($cache['total_hit_count'] / ($cache['total_hit_count'] + $cache['total_miss_count'])) * 100, 2) ,
         )
       );
     }
 
     // Check for opcache size configuration.
     if ($phase == 'runtime') {
+
       $options = ini_get_all('wincache', true);
       // 1.3.7.2 What's new:
       // If you disable the WinCache opcache in the php.ini (wincache.ocenabled=0),
@@ -60,7 +61,7 @@ class Installer {
           $ocachesize = $options['wincache.ocachesize']['local_value'];
           $requirements['wincache_oc_size'] = array(
             'title' => $this->t('Wincache opcode cache size'),
-            'value' => $this->t('Opcode caching is disabled and current cache size is !sizeMb', array('!size' => $ocachesize)),
+            'value' => $this->t('Opcode caching is disabled and current cache size is @sizeMb', array('@size' => $ocachesize)),
             'severity' => ($ocachesize > 15) ? REQUIREMENT_ERROR : REQUIREMENT_OK,
             'description' => $this->t('When opcode caching is disabled, reduce memory pressure on the server by setting wincache.ocachesize to the minimum value allowed (15Mb).')
           );
