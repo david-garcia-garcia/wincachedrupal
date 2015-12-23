@@ -8,3 +8,7 @@ services:
   keyvalue.expirable.wincache:
     class: Drupal\wincachedrupal\wincachedrupal\KeyValueWincacheExpirableFactory
     arguments: ['@serialization.phpserialize', '@database']
+  wincachedrupal.eventsubscriber:
+    class: Drupal\wincachedrupal\EventSubscriber
+    tags:
+      - { name: event_subscriber }
