@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\wincachedrupal\Cache\wincachedrupalTagChecksum.
+ * Contains \Drupal\wincachedrupal\Cache\DummyTagChecksum.
  */
 
 namespace Drupal\wincachedrupal\Cache;

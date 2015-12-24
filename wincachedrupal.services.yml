@@ -2,6 +2,9 @@ services:
   cache.backend.wincache:
     class: Drupal\wincachedrupal\Cache\WincacheBackendFactory
     arguments: ['@app.root', '@site.path', '@cache_tags.invalidator.checksum']
+  cache.rawbackend.wincache:
+    class: Drupal\wincachedrupal\Cache\WincacheRawBackendFactory
+    arguments: ['@app.root', '@site.path']
   keyvalue.wincache:
     class: Drupal\wincachedrupal\KeyValueStorage\KeyValueWincacheFactory
     arguments: ['@serialization.phpserialize', '@database']

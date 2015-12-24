@@ -2,12 +2,12 @@
 
 /**
  * @file
- * Contains \Drupal\wincachedrupal\Cache\wincachedrupalRawBackend.
+ * Contains \Drupal\wincachedrupal\Cache\WincacheRawBackend.
  */
 
 namespace Drupal\wincachedrupal\Cache;
 
-use Drupal\Core\Cache\CacheRawBackendInterface;
+use Drupal\supercache\Cache\CacheRawBackendInterface;
 
 /**
  * Stores cache items in Wincache.
