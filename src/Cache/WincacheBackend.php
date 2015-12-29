@@ -16,6 +16,8 @@ use Drupal\Core\Cache\Cache;
  */
 class WincacheBackend implements CacheBackendInterface {
 
+  use WincacheBackendTrait;
+
   /**
    * The name of the cache bin to use.
    *
@@ -58,9 +60,10 @@ class WincacheBackend implements CacheBackendInterface {
    */
   public function __construct($bin, $site_prefix, CacheTagsChecksumInterface $checksum_provider) {
     $this->bin = $bin;
-    $this->sitePrefix = md5($site_prefix);
+    $this->sitePrefix = $this->shortMd5($site_prefix);
     $this->checksumProvider = $checksum_provider;
-    $this->binPrefix = $this->sitePrefix . '::' . $this->bin . '::';
+    $this->binPrefix = $this->sitePrefix . ':' . $this->bin . ':';
+    $this->refreshRequestTime();
   }
 
   /**
@@ -132,23 +135,22 @@ class WincacheBackend implements CacheBackendInterface {
    *   An array of Keys for this binary.
    */
   public function getAll($prefix = '') {
-    $data = wincache_ucache_info();
-    $k = array_column($data['ucache_entries'], 'key_name');
-    $keys = preg_grep('/^' . $this->getBinKey($prefix) . '/', $k);
-    return $keys;
+    $cids = $this->getAllKeys($prefix);
+    $result = $this->getMultiple($cids);
+    return $result;
   }
 
   /**
-   * Returns all cached items for this binary.
+   * Return all keys of cached items.
    * 
-   * @return string[]
+   * @param string $prefix 
+   * @return array
    */
-  protected function getAllBinary() {
-    $data = wincache_ucache_info();
-    $k = array_column($data['ucache_entries'], 'key_name');
-    $keys = preg_grep('/^' . $this->binPrefix . '/', $k);
-    return $keys;
+  public function getAllKeys($prefix = '') {
+    $key = $this->getBinKey($prefix);
+    return $this->getAllKeysWithPrefix($key);
   }
+
 
   /**
    * Prepares a cached item.
@@ -172,7 +174,7 @@ class WincacheBackend implements CacheBackendInterface {
     $cache->tags = $cache->tags ? explode(' ', $cache->tags) : array();
 
     // Check expire time.
-    $cache->valid = $cache->expire == Cache::PERMANENT || $cache->expire >= REQUEST_TIME;
+    $cache->valid = $cache->expire == Cache::PERMANENT || $cache->expire >= $this->requestTime;
 
     // Check if invalidateTags() has been called with any of the entry's tags.
     if (!$this->checksumProvider->isValid($cache->checksum, $cache->tags)) {
@@ -205,19 +207,8 @@ class WincacheBackend implements CacheBackendInterface {
    * {@inheritdoc}
    */
   public function set($cid, $data, $expire = CacheBackendInterface::CACHE_PERMANENT, array $tags = array()) {
-    
     $cache = $this->prepareCacheItem($cid, $data, $expire, $tags);
-
-    // wincache_ucache_set()'s $ttl argument must be ommited for permament items,
-    // in which case the value will persist until it's removed from the cache or
-    // until the next cache clear, restart, etc. This is what we want to do
-    // when $expire equals CacheBackendInterface::CACHE_PERMANENT.
-    if ($expire == CacheBackendInterface::CACHE_PERMANENT) {
-      wincache_ucache_set($this->getBinKey($cid), $cache);
-    }
-    else {
-      wincache_ucache_set($this->getBinKey($cid), $cache, $expire);
-    }
+    $this->wincacheSet($this->getBinKey($cid), $cache, $expire);
   }
 
 
@@ -230,23 +221,8 @@ class WincacheBackend implements CacheBackendInterface {
    * @param array $tags 
    */
   public function add($cid, $data, $expire = CacheBackendInterface::CACHE_PERMANENT, array $tags = array()) {
-    
     $cache = $this->prepareCacheItem($cid, $data, $expire, $tags);
-
-    // wincache_ucache_set()'s $ttl argument must be ommited for permament items,
-    // in which case the value will persist until it's removed from the cache or
-    // until the next cache clear, restart, etc. This is what we want to do
-    // when $expire equals CacheBackendInterface::CACHE_PERMANENT.
-    set_error_handler(function() { /* Prevent Drupal from logging any exceptions or warning thrown here */ }, E_ALL);
-    $set_result = TRUE;
-    if ($expire == CacheBackendInterface::CACHE_PERMANENT) {
-      $set_result = @wincache_ucache_add($this->getBinKey($cid), $cache);
-    }
-    else {
-      $set_result = @wincache_ucache_add($this->getBinKey($cid), $cache, $expire);
-    }
-    restore_error_handler();
-    return $set_result;
+    return $this->wincacheAdd($cid, $cache, $expire);
   }
 
   /**
@@ -275,13 +251,6 @@ class WincacheBackend implements CacheBackendInterface {
   /**
    * {@inheritdoc}
    */
-  public function deleteAll() {
-    wincache_ucache_delete($this->getAll());
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function garbageCollection() {
     // Wincache performs garbage collection automatically.
   }
@@ -290,7 +259,14 @@ class WincacheBackend implements CacheBackendInterface {
    * {@inheritdoc}
    */
   public function removeBin() {
-    wincache_ucache_delete($this->getAllBinary());
+    $this->deleteMultiple($this->getAllKeys());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function deleteAll() {
+    $this->deleteMultiple($this->getAllKeys());
   }
 
   /**
@@ -305,7 +281,7 @@ class WincacheBackend implements CacheBackendInterface {
    */
   public function invalidateMultiple(array $cids) {
     foreach ($this->getMultiple($cids) as $cache) {
-      $this->set($cache->cid, $cache, REQUEST_TIME - 1);
+      $this->set($cache->cid, $cache, $this->requestTime - 1);
     }
   }
 
@@ -315,7 +291,7 @@ class WincacheBackend implements CacheBackendInterface {
   public function invalidateAll() {
     foreach ($this->getAll() as $data) {
       $cid = str_replace($this->binPrefix, '', $data['key']);
-      $this->set($cid, $data['value'], REQUEST_TIME - 1);
+      $this->set($cid, $data['value'], $this->requestTime - 1);
     }
   }
 

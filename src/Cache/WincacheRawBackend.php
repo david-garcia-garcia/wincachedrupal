@@ -14,19 +14,7 @@ use Drupal\supercache\Cache\CacheRawBackendInterface;
  */
 class WincacheRawBackend implements CacheRawBackendInterface {
 
-  /**
-   * The Cache API uses a unixtimestamp to set
-   * expiration. But Wincache expects a TTL.
-   * 
-   * @param int $expire
-   */
-  protected function getTtl($expire) {
-    if ($expire == CacheRawBackendInterface::CACHE_PERMANENT) {
-      // If no ttl is supplied (or if the ttl is 0), the value will persist until it is removed from the cache manually, or otherwise fails to exist in the cache (clear, restart, etc.).
-      return 0;
-    }
-    return $expire - time();
-  }
+  use WincacheBackendTrait;
 
   /**
    * The name of the cache bin to use.
@@ -63,8 +51,9 @@ class WincacheRawBackend implements CacheRawBackendInterface {
    */
   public function __construct($bin, $site_prefix) {
     $this->bin = $bin;
-    $this->sitePrefix = $site_prefix;
-    $this->binPrefix = $this->sitePrefix . '::' . $this->bin . '::';
+    $this->sitePrefix = $this->shortMd5($site_prefix);
+    $this->binPrefix = $this->sitePrefix . ':' . $this->bin . ':';
+    $this->refreshRequestTime();
   }
 
   /**
@@ -132,11 +121,21 @@ class WincacheRawBackend implements CacheRawBackendInterface {
    * @return string[]
    *   An APCIterator containing matched items.
    */
-  protected function getAll($prefix = '') {
-    $data = wincache_ucache_info();
-    $k = array_column($data['ucache_entries'], 'key_name');
-    $keys = preg_grep('/^' . $this->getKey($prefix) . '/', $k);
-    return $keys;
+  public function getAll($prefix = '') {
+    $keys = $this->getAllKeys($prefix);
+    $result = $this->getMultiple($keys);
+    return $result;
+  }
+
+  /**
+   * Return all keys of cached items.
+   *
+   * @param string $prefix
+   * @return array
+   */
+  public function getAllKeys($prefix = '') {
+    $key = $this->getKey($prefix);
+    return $this->getAllKeysWithPrefix($key);
   }
 
   /**
@@ -157,28 +156,10 @@ class WincacheRawBackend implements CacheRawBackendInterface {
   }
 
   /**
-   * Wrapper for wincache_ucache_set to properly manage expirations.
-   * 
-   * @param string $cid 
-   * @param mixed $data 
-   * @param int $expire 
-   */
-  protected function wincacheStore($cid, $data, $expire) {
-     if ($ttl = $this->getTtl($expire)) {
-       wincache_ucache_set($this->getKey($cid), $data, $ttl);
-     }
-     else {
-       wincache_ucache_set($this->getKey($cid), $data);
-     }
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function set($cid, $data, $expire = CacheRawBackendInterface::CACHE_PERMANENT) {
-    // APC Serializes/Unserializes automatically plus
-    // we want to store native types unserialized when possible.
-    $this->wincacheStore($cid, $data, $expire);
+    $this->wincacheSet($this->getKey($cid), $data, $expire);
   }
 
   /**
@@ -207,42 +188,84 @@ class WincacheRawBackend implements CacheRawBackendInterface {
   /**
    * {@inheritdoc}
    */
-  public function deleteAll() {
-    wincache_ucache_delete($this->getAll());
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function garbageCollection() {
-    // APC performs garbage collection automatically.
+    // Wincache performs garbage collection automatically.
   }
 
   /**
    * {@inheritdoc}
    */
   public function removeBin() {
-    wincache_ucache_delete($this->getAll());
+    $this->deleteMultiple($this->getAllKeys());
   }
 
   /**
    * {@inheritdoc}
    */
-  public function counter($cid, $increment, $default = 0, $expire = CacheRawBackendInterface::PERMANENT) {
+  public function deleteAll() {
+    $this->deleteMultiple($this->getAllKeys());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function counter($cid, $increment, $default = 0) {
     $success = FALSE;
-    wincache_ucache_inc($this->getKey($cid), $increment, $success);
+    $key = $this->getKey($cid);
+    wincache_ucache_inc($key, $increment, $success);
     if (!$success) {
-      $this->wincacheStore($cid, $default, $expire);
+      if (wincache_ucache_exists($key)) {
+        throw new \Exception("Failed to increment item.");
+      }
+      $this->wincacheSet($key, $default, CacheRawBackendInterface::CACHE_PERMANENT);
     }
   }
 
   /**
    * {@inheritdoc}
    */
-  public function counterMultiple(array $cids, $increment, $default = 0, $expire = CacheRawBackendInterface::PERMANENT) {
+  public function counterMultiple(array $cids, $increment, $default = 0) {
     foreach ($cids as $cid) {
-      $this->counter($cid, $increment, $default, $expire);
+      $this->counter($cid, $increment, $default);
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function counterSet($cid, $value) {
+    $this->set($cid, (int) $value);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function counterSetMultiple(array $items) {
+    foreach ($items as $cid => $item) {
+      $this->counterSet($cid, (int) $item);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function counterGet($cid) {
+    if ($result = $this->get($cid)) {
+      return (int) $result->data;
+    }
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function counterGetMultiple(array &$cids) {
+    $results = $this->getMultiple($cids);
+    $counters = [];
+    foreach ($results as $cid => $item) {
+      $counters[$cid] = (int) $item->data;
+    }
+    return $counters;
   }
 
   /**
@@ -250,11 +273,12 @@ class WincacheRawBackend implements CacheRawBackendInterface {
    */
   public function touch($cid, $expire = CacheRawBackendInterface::PERMANENT) {
     $success = FALSE;
-    $data = wincache_ucache_get($this->getKey($cid), $success);
+    $key = $this->getKey($cid);
+    $data = wincache_ucache_get($key, $success);
     if (!$success) {
-      throw new \Exception("Cannot touch a non existent item.");
+      throw new \Exception("Failed to touch item.");
     }
-    $this->wincacheStore($cid, $data, $expire);
+    $this->wincacheSet($key, $data, $expire);
   }
 
   /**
