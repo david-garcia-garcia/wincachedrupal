@@ -33,15 +33,6 @@ class WincacheBackend implements CacheBackendInterface {
   protected $sitePrefix;
 
   /**
-   * Prefix for all keys in this cache bin.
-   *
-   * Includes the site-specific prefix in $sitePrefix.
-   *
-   * @var string
-   */
-  protected $binPrefix;
-
-  /**
    * The cache tags checksum provider.
    *
    * @var \Drupal\Core\Cache\CacheTagsChecksumInterface
@@ -64,19 +55,6 @@ class WincacheBackend implements CacheBackendInterface {
     $this->checksumProvider = $checksum_provider;
     $this->binPrefix = $this->sitePrefix . ':' . $this->bin . ':';
     $this->refreshRequestTime();
-  }
-
-  /**
-   * Prepends the Wincache user variable prefix for this bin to a cache item ID.
-   *
-   * @param string $cid
-   *   The cache item ID to prefix.
-   *
-   * @return string
-   *   The APCu key for the cache item ID.
-   */
-  protected function getBinKey($cid) {
-    return $this->binPrefix . $cid;
   }
 
   /**
@@ -251,8 +229,8 @@ class WincacheBackend implements CacheBackendInterface {
   /**
    * {@inheritdoc}
    */
-  public function garbageCollection() {
-    // Wincache performs garbage collection automatically.
+  public function deleteAll() {
+    $this->deleteMultiple($this->getAllKeys());
   }
 
   /**
@@ -265,34 +243,28 @@ class WincacheBackend implements CacheBackendInterface {
   /**
    * {@inheritdoc}
    */
-  public function deleteAll() {
-    $this->deleteMultiple($this->getAllKeys());
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function invalidate($cid) {
-    $this->invalidateMultiple(array($cid));
+    $this->invalidateMultiple([$cid]);
   }
 
   /**
    * {@inheritdoc}
    */
   public function invalidateMultiple(array $cids) {
-    foreach ($this->getMultiple($cids) as $cache) {
-      $this->set($cache->cid, $cache, $this->requestTime - 1);
-    }
+    $this->deleteMultiple($cids);
   }
 
   /**
    * {@inheritdoc}
    */
   public function invalidateAll() {
-    foreach ($this->getAll() as $data) {
-      $cid = str_replace($this->binPrefix, '', $data['key']);
-      $this->set($cid, $data['value'], $this->requestTime - 1);
-    }
+    $this->deleteAll();
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function garbageCollection() {
+    // Nothing to do with wincache.
+  }
 }

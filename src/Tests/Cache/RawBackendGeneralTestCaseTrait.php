@@ -5,7 +5,7 @@ namespace Drupal\wincachedrupal\Tests\Cache;
 use Drupal\supercache\Tests\Generic\Cache\BackendGeneralTestCase;
 
 use Drupal\wincachedrupal\Cache\WincacheRawBackendFactory;
-use Drupal\wincachedrupal\Cache\DummyTagChecksum;
+use Drupal\supercache\Cache\DummyTagChecksum;
 
 trait RawBackendGeneralTestCaseTrait {
 

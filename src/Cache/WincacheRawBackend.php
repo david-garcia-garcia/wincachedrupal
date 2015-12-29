@@ -31,15 +31,6 @@ class WincacheRawBackend implements CacheRawBackendInterface {
   protected $sitePrefix;
 
   /**
-   * Prefix for all keys in this cache bin.
-   *
-   * Includes the site-specific prefix in $sitePrefix.
-   *
-   * @var string
-   */
-  protected $binPrefix;
-
-  /**
    * Constructs a new WincacheRawBackend instance.
    *
    * @param string $bin
@@ -57,24 +48,11 @@ class WincacheRawBackend implements CacheRawBackendInterface {
   }
 
   /**
-   * Prepends the APC user variable prefix for this bin to a cache item ID.
-   *
-   * @param string $cid
-   *   The cache item ID to prefix.
-   *
-   * @return string
-   *   The APCu key for the cache item ID.
-   */
-  public function getKey($cid) {
-    return $this->binPrefix . $cid;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function get($cid) {
     $success = FALSE;
-    $data = wincache_ucache_get($this->getKey($cid), $success);
+    $data = wincache_ucache_get($this->getBinKey($cid), $success);
     if (!$success) {
       return FALSE;
     }
@@ -88,7 +66,7 @@ class WincacheRawBackend implements CacheRawBackendInterface {
     // Translate the requested cache item IDs to APCu keys.
     $map = array();
     foreach ($cids as $cid) {
-      $map[$this->getKey($cid)] = $cid;
+      $map[$this->getBinKey($cid)] = $cid;
     }
 
     $result = wincache_ucache_get(array_keys($map));
@@ -108,7 +86,7 @@ class WincacheRawBackend implements CacheRawBackendInterface {
   /**
    * Returns all cached items, optionally limited by a cache ID prefix.
    *
-   * APCu is a memory cache, shared across all server processes. To prevent
+   * Wincache is a memory cache, shared across all server processes. To prevent
    * cache item clashes with other applications/installations, every cache item
    * is prefixed with a unique string for this site. Therefore, functions like
    * apc_clear_cache() cannot be used, and instead, a list of all cache items
@@ -119,7 +97,7 @@ class WincacheRawBackend implements CacheRawBackendInterface {
    *   (optional) A cache ID prefix to limit the result to.
    *
    * @return string[]
-   *   An APCIterator containing matched items.
+   *   An array containing matched items.
    */
   public function getAll($prefix = '') {
     $keys = $this->getAllKeys($prefix);
@@ -131,10 +109,12 @@ class WincacheRawBackend implements CacheRawBackendInterface {
    * Return all keys of cached items.
    *
    * @param string $prefix
+   *   (optional) A cache ID prefix to limit the result to.
    * @return array
+   *   An array containing matched keys.
    */
   public function getAllKeys($prefix = '') {
-    $key = $this->getKey($prefix);
+    $key = $this->getBinKey($prefix);
     return $this->getAllKeysWithPrefix($key);
   }
 
@@ -159,7 +139,7 @@ class WincacheRawBackend implements CacheRawBackendInterface {
    * {@inheritdoc}
    */
   public function set($cid, $data, $expire = CacheRawBackendInterface::CACHE_PERMANENT) {
-    $this->wincacheSet($this->getKey($cid), $data, $expire);
+    $this->wincacheSet($this->getBinKey($cid), $data, $expire);
   }
 
   /**
@@ -175,14 +155,14 @@ class WincacheRawBackend implements CacheRawBackendInterface {
    * {@inheritdoc}
    */
   public function delete($cid) {
-    wincache_ucache_delete($this->getKey($cid));
+    wincache_ucache_delete($this->getBinKey($cid));
   }
 
   /**
    * {@inheritdoc}
    */
   public function deleteMultiple(array $cids) {
-    wincache_ucache_delete(array_map(array($this, 'getKey'), $cids));
+    wincache_ucache_delete(array_map(array($this, 'getBinKey'), $cids));
   }
 
   /**
@@ -211,13 +191,13 @@ class WincacheRawBackend implements CacheRawBackendInterface {
    */
   public function counter($cid, $increment, $default = 0) {
     $success = FALSE;
-    $key = $this->getKey($cid);
-    wincache_ucache_inc($key, $increment, $success);
+    $key = $this->getBinKey($cid);
+    @wincache_ucache_inc($key, $increment, $success);
     if (!$success) {
       if (wincache_ucache_exists($key)) {
-        throw new \Exception("Failed to increment item.");
+        trigger_error("Cache item $cid could not be incremented. Resetinng to default value.", E_USER_NOTICE);
       }
-      $this->wincacheSet($key, $default, CacheRawBackendInterface::CACHE_PERMANENT);
+      $this->wincacheSet($key, $default);
     }
   }
 
@@ -266,28 +246,6 @@ class WincacheRawBackend implements CacheRawBackendInterface {
       $counters[$cid] = (int) $item->data;
     }
     return $counters;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function touch($cid, $expire = CacheRawBackendInterface::PERMANENT) {
-    $success = FALSE;
-    $key = $this->getKey($cid);
-    $data = wincache_ucache_get($key, $success);
-    if (!$success) {
-      throw new \Exception("Failed to touch item.");
-    }
-    $this->wincacheSet($key, $data, $expire);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function touchMultiple(array $cids, $expire = CacheRawBackendInterface::PERMANENT) {
-    foreach ($cids as $cid) {
-      $this->touch($cid, $expire);
-    }
   }
 
 }

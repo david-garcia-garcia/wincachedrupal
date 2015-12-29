@@ -11,7 +11,7 @@ use Drupal\Component\FileCache\FileCache;
 use Drupal\Component\FileCache\FileCacheBackendInterface;
 
 /**
- * APCu backend for the file cache.
+ * Wincache backend for the file cache.
  */
 class WincacheFileCacheBackend implements FileCacheBackendInterface {
 

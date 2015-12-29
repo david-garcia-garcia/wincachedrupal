@@ -12,7 +12,7 @@ use Drupal\Core\Database\IntegrityConstraintViolationException;
 
 use Drupal\Core\Lock\LockBackendAbstract;
 
-use Drupal\wincachedrupal\Cache\DummyTagChecksum;
+use Drupal\supercache\Cache\DummyTagChecksum;
 use Drupal\wincachedrupal\Cache\WincacheBackend;
 
 /**

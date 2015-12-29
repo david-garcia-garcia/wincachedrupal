@@ -8,9 +8,9 @@
 namespace Drupal\wincachedrupal\Cache;
 
 use Drupal\Core\Site\Settings;
-use Drupal\Core\Cache\CacheFactoryInterface;
+use Drupal\supercache\Cache\CacheRawFactoryInterface;
 
-class WincacheRawBackendFactory implements CacheFactoryInterface {
+class WincacheRawBackendFactory implements CacheRawFactoryInterface {
 
   /**
    * The cache tags checksum provider.
