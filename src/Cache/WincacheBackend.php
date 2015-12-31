@@ -14,23 +14,7 @@ use Drupal\Core\Cache\Cache;
 /**
  * Stores cache items in the Alternative PHP Cache User Cache (APCu).
  */
-class WincacheBackend implements CacheBackendInterface {
-
-  use WincacheBackendTrait;
-
-  /**
-   * The name of the cache bin to use.
-   *
-   * @var string
-   */
-  protected $bin;
-
-  /**
-   * Prefix for all keys in the storage that belong to this site.
-   *
-   * @var string
-   */
-  protected $sitePrefix;
+class WincacheBackend extends WincacheBackendGeneric implements CacheBackendInterface {
 
   /**
    * The cache tags checksum provider.
@@ -50,11 +34,8 @@ class WincacheBackend implements CacheBackendInterface {
    *   The cache tags checksum provider.
    */
   public function __construct($bin, $site_prefix, CacheTagsChecksumInterface $checksum_provider) {
-    $this->bin = $bin;
-    $this->sitePrefix = $this->shortMd5($site_prefix);
     $this->checksumProvider = $checksum_provider;
-    $this->binPrefix = $this->sitePrefix . ':' . $this->bin . ':';
-    $this->refreshRequestTime();
+    parent::__construct('cache_' . $bin, $site_prefix);
   }
 
   /**
@@ -230,14 +211,14 @@ class WincacheBackend implements CacheBackendInterface {
    * {@inheritdoc}
    */
   public function deleteAll() {
-    $this->deleteMultiple($this->getAllKeys());
+    parent::invalidateBinary();
   }
 
   /**
    * {@inheritdoc}
    */
   public function removeBin() {
-    $this->deleteMultiple($this->getAllKeys());
+    parent::invalidateBinary();
   }
 
   /**
@@ -265,6 +246,6 @@ class WincacheBackend implements CacheBackendInterface {
    * {@inheritdoc}
    */
   public function garbageCollection() {
-    // Nothing to do with wincache.
+    parent::garbageCollectInvalidations();
   }
 }

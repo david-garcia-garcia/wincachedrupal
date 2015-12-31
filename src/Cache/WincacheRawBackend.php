@@ -12,23 +12,7 @@ use Drupal\supercache\Cache\CacheRawBackendInterface;
 /**
  * Stores cache items in Wincache.
  */
-class WincacheRawBackend implements CacheRawBackendInterface {
-
-  use WincacheBackendTrait;
-
-  /**
-   * The name of the cache bin to use.
-   *
-   * @var string
-   */
-  protected $bin;
-
-  /**
-   * Prefix for all keys in the storage that belong to this site.
-   *
-   * @var string
-   */
-  protected $sitePrefix;
+class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBackendInterface {
 
   /**
    * Constructs a new WincacheRawBackend instance.
@@ -37,14 +21,9 @@ class WincacheRawBackend implements CacheRawBackendInterface {
    *   The name of the cache bin.
    * @param string $site_prefix
    *   The prefix to use for all keys in the storage that belong to this site.
-   * @param \Drupal\Core\Cache\CacheTagsChecksumInterface $checksum_provider
-   *   The cache tags checksum provider.
    */
   public function __construct($bin, $site_prefix) {
-    $this->bin = $bin;
-    $this->sitePrefix = $this->shortMd5($site_prefix);
-    $this->binPrefix = $this->sitePrefix . ':' . $this->bin . ':';
-    $this->refreshRequestTime();
+    parent::__construct('rawcache_' . $bin, $site_prefix);
   }
 
   /**
@@ -169,21 +148,21 @@ class WincacheRawBackend implements CacheRawBackendInterface {
    * {@inheritdoc}
    */
   public function garbageCollection() {
-    // Wincache performs garbage collection automatically.
+    parent::garbageCollectInvalidations();
   }
 
   /**
    * {@inheritdoc}
    */
   public function removeBin() {
-    $this->deleteMultiple($this->getAllKeys());
+    parent::invalidateBinary();
   }
 
   /**
    * {@inheritdoc}
    */
   public function deleteAll() {
-    $this->deleteMultiple($this->getAllKeys());
+    parent::invalidateBinary();
   }
 
   /**
