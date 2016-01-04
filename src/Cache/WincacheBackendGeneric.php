@@ -4,7 +4,11 @@ namespace Drupal\wincachedrupal\Cache;
 
 use Drupal\Core\Cache\CacheBackendInterface;
 
+use Drupal\supercache\Cache\RequestTimeTrait;
+
 abstract class WincacheBackendGeneric {
+
+  use RequestTimeTrait;
 
   const INVALIDATIONCOUNT = '@@wincache_invalidation_count';
   const INVALIDATIONS = '@@wincache_invalidations';
@@ -32,14 +36,6 @@ abstract class WincacheBackendGeneric {
   protected $sitePrefix;
 
   /**
-   * Current time used to validate
-   * cache item expiration times.
-   *
-   * @var int
-   */
-  protected $requestTime;
-
-  /**
    * Prefix for all keys in this cache bin.
    *
    * Includes the site-specific prefix in $sitePrefix.
@@ -47,16 +43,6 @@ abstract class WincacheBackendGeneric {
    * @var string
    */
   protected $binPrefix;
-
-  /**
-   * Returns a 12 character length MD5.
-   *
-   * @param string $string
-   * @return string
-   */
-  public function shortMd5($string) {
-    return substr(base_convert(md5($string), 16,32), 0, 12);
-  }
 
   /**
    * Wrapper for wincache_ucache_set to properly manage expirations.
@@ -148,27 +134,6 @@ abstract class WincacheBackendGeneric {
       $keys = preg_replace($regex, '', $keys);
     }
     return $keys;
-  }
-
-  /**
-   * Refreshes the current request time.
-   *
-   * Uses the global REQUEST_TIME on the first
-   * call and refreshes to current time on subsequent
-   * calls.
-   */
-  public function refreshRequestTime() {
-    if (empty($this->requestTime)) {
-      if (defined('REQUEST_TIME')) {
-        $this->requestTime = REQUEST_TIME;
-        return;
-      }
-      if (isset($_SERVER['REQUEST_TIME_FLOAT'])) {
-        $this->requestTime = round($_SERVER['REQUEST_TIME_FLOAT'], 3);
-        return;
-      }
-    }
-    $this->requestTime = round(microtime(TRUE), 3);
   }
 
   /**
