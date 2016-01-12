@@ -22,6 +22,44 @@ class Installer {
       'description' => $wincache_ucache_enabled ? NULL : $this->t('The wincachedrupal module needs the wincache extension see: @link.', array('@link' => l('http://php.net/manual/en/book.wincache.php', '')))
     );
 
+    $comenabled = extension_loaded('com_dotnet');
+    if (!$comenabled) {
+      $requirements['wincache_comenabled'] = array(
+        'title' => $this->t('WinCache com_dotnet enabled'),
+        'value' => $comenabled ? $this->t('Yes') : $this->t('No'),
+        'severity' => $comenabled ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+        'description' => $comenabled ? $this->t('The com_dotnet extension is loaded.') : $this->t('.Net performance optimizations not available. The COM DOTNET extension is not loaded. Add extension=com_dotnet.dll to your php.ini file.')
+      );
+    }
+
+    // The first step is to enable COM, then make the NetPhp binary available.
+    if ($comenabled) {
+
+      /** @var \Drupal\wincachedrupal\NetPhp */
+      $netphp = \Drupal::service('netphp');
+
+      $netphp_support = $netphp->hasNetPhpSupport();
+      $netphp_version = FALSE;
+      if ($netphp_support === TRUE) {
+        $netphp_version = $netphp->getRuntime()->GetStringVersion() . ' | ' . $netphp->getRuntime()->GetRuntimeVersion()->GetJson();
+      }
+      $requirements['wincache_netphp'] = array(
+        'title' => $this->t('WinCache NetPhp version'),
+        'value' => $netphp_support === TRUE ? $this->t('The NetPhp service is up and running.') : $this->t('.Net based performance optimizations are not available. Either the NetPhp to start or you have not deployed it yet. See the Readme.md file for setup instructions.'),
+        'severity' => $netphp_support === TRUE ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+        'description' => $netphp_support === TRUE ? $netphp_version : $netphp_support,
+      );
+
+      // Asset optimizations need the AjaxMin library.
+      $ajaxmin_support = $netphp->hasAjaxMinSupport();
+      $requirements['wincache_ajaxmin'] = array(
+        'title' => $this->t('Wincache AjaxMin asset optimization'),
+        'value' => $ajaxmin_support === TRUE ? $this->t('Asset optimization enabled using the AjaxMin library.') : $this->t('AjaxMin assset optimizations not available.'),
+        'severity' => $ajaxmin_support === TRUE ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+        'description' => $ajaxmin_support === TRUE ? NULL : $ajaxmin_support,
+      );
+    }
+
     if ($wincache_ucache_enabled) {
 
       /** @var \Drupal\Core\Datetime\DateFormatterInterface */

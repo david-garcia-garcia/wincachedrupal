@@ -56,5 +56,19 @@ class WincachedrupalServiceProvider implements ServiceProviderInterface {
       $definition->setArguments($args);
     }
     #endregion
+
+    $definition = $container->getDefinition('asset.js.optimizer');
+    if ($definition->getClass() == \Drupal\Core\Asset\JsOptimizer::class) {
+      $couchbase_definition = $container->getDefinition('wincache.js.optimizer');
+      $definition->setClass($couchbase_definition->getClass());
+      $definition->setArguments($couchbase_definition->getArguments());
+    }
+
+    $definition = $container->getDefinition('asset.css.optimizer');
+    if ($definition->getClass() == \Drupal\Core\Asset\CssOptimizer::class) {
+      $couchbase_definition = $container->getDefinition('wincache.css.optimizer');
+      $definition->setClass($couchbase_definition->getClass());
+      $definition->setArguments($couchbase_definition->getArguments());
+    }
   }
 }

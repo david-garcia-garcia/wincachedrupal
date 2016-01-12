@@ -15,3 +15,15 @@ services:
     class: Drupal\wincachedrupal\EventSubscriber
     tags:
       - { name: event_subscriber }
+  wincache.js.optimizer:
+    class: Drupal\wincachedrupal\Asset\JsOptimizer
+    arguments: ['@netphp']
+  wincache.css.optimizer:
+    class: Drupal\wincachedrupal\Asset\CssOptimizer
+    arguments: ['@netphp']
+  netphp:
+    class: Drupal\wincachedrupal\NetPhp
+
+
+
+     

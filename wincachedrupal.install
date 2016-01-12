@@ -4,6 +4,9 @@
  * Implements hook_requirements().
  */
 function wincachedrupal_requirements($phase) {
-  $installer = new \Drupal\wincachedrupal\Installer();
-  return $installer->requirements($phase);
+  if ($phase == 'runtime') {
+    $installer = new \Drupal\wincachedrupal\Installer();
+    return $installer->requirements($phase);
+  }
+  return [];
 }
