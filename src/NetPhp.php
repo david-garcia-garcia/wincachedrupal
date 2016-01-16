@@ -75,6 +75,10 @@ class NetPhp {
     $this->status['com_enabled'] = TRUE;
 
     try {
+      if (!class_exists(\NetPhp\Core\NetPhpRuntime::class)) {
+        $this->status['netphp'] = 'NetPhpRuntime class not found. Make sure you run composer drupal-update.';
+        return;
+      }
       $this->runtime = new \NetPhp\Core\NetPhpRuntime('COM', '{2BF990C8-2680-474D-BDB4-65EEAEE0015F}');
       $this->runtime->Initialize();
       $this->status['netphp'] = TRUE;
