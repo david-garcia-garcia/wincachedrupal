@@ -62,6 +62,9 @@ class MiscelaneaTests extends KernelTestBase {
     $definition = $data['core/core.services.yml'];
 
     foreach ($definition['services'] as $service) {
+      if (!isset($service['tags'])) {
+        continue;
+      }
       $tagdef = $this->doSerialize($use_json, $service['tags']);
       foreach ($service['tags'] as $tag) {
         $name = $tag['name'];

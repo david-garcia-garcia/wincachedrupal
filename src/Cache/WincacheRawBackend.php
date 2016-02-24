@@ -173,9 +173,6 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
     $key = $this->getBinKey($cid);
     @wincache_ucache_inc($key, $increment, $success);
     if (!$success) {
-      if (wincache_ucache_exists($key)) {
-        trigger_error("Cache item $cid could not be incremented. Resetinng to default value.", E_USER_NOTICE);
-      }
       $this->wincacheSet($key, $default);
     }
   }

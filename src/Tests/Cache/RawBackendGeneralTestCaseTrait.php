@@ -18,6 +18,8 @@ trait RawBackendGeneralTestCaseTrait {
     // The aim of this setup is to get two functional backend instances.
     $this->backend = $factory->get('test_binary');
     $this->backend2 = $factory->get('test_binary_alt');
+
+    parent::setUp();
   }
 
   public function tearDown() {
