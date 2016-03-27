@@ -296,7 +296,7 @@
  - Provide a set of tests.
 
  /*****************
- * 7. Wincache Lock Mechanism
+ * 8. Wincache Lock Mechanism
  ****************/
 
   To enable the Wincache based Lock mechanism in settings.php:
@@ -309,3 +309,13 @@
 
   Beware that this locking should only be used on single-server setup because
   wincache cannot be shared accross servers.
+
+ /*****************
+ * 9. DRUSH Support
+ ****************/
+
+  To enable drush support (or any other command line usage of Drupal) the wincache PHP extension
+  requires one to enable WinCache's Command Line Interface (CLI) support. To do so place 
+  the following in your php.ini:
+
+  wincache.enablecli=1
