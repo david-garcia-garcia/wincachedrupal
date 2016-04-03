@@ -32,25 +32,27 @@ class WincacheShutdown {
     $threshold = 0.1;
     // Make sure that the user cache is not FULL
     $user_cache_available = function_exists('wincache_ucache_info') && !strcmp(ini_get('wincache.ucenabled'), "1");
-    if ($user_cache_available) {
-      $ucache_mem_info = wincache_ucache_meminfo();
-      // Under some situations WincacheDrupal will fail to report
-      // any data through wincache_ucache_meminfo().
-      if (!empty($ucache_mem_info)) {
-        $ucache_available_memory = $ucache_mem_info['memory_total'] - $ucache_mem_info['memory_overhead'];
-        $free_memory_ratio = $ucache_mem_info['memory_free'] / $ucache_available_memory;
-        // If free memory is below 10% of total
-        // do a cache wipe!
-        if ($free_memory_ratio < $threshold) {
-          $params = array();
-          $params["@free"] = round($ucache_mem_info['memory_free'] / 1024, 0);
-          $params["@total"] = round($ucache_mem_info['memory_total'] / 1024, 0);
-          $params["@avail"] = round($ucache_available_memory / 1024, 0);
-          $this->logger->notice('Usercache threshold limit reached. @free Kb free out of @avail Kb available from a total of @total Kb. Cache cleared.', $params);
-          wincache_ucache_clear();
-        }
+    if (!$user_cache_available) {
+      return;
+    }
+    $ucache_mem_info = wincache_ucache_meminfo();
+    // Under some situations WincacheDrupal will fail to report
+    // any data through wincache_ucache_meminfo().
+    if (!empty($ucache_mem_info)) {
+      $ucache_available_memory = $ucache_mem_info['memory_total'] - $ucache_mem_info['memory_overhead'];
+      $free_memory_ratio = $ucache_mem_info['memory_free'] / $ucache_available_memory;
+      // If free memory is below 10% of total
+      // do a cache wipe!
+      if ($free_memory_ratio < $threshold) {
+        $params = array();
+        $params["@free"] = round($ucache_mem_info['memory_free'] / 1024, 0);
+        $params["@total"] = round($ucache_mem_info['memory_total'] / 1024, 0);
+        $params["@avail"] = round($ucache_available_memory / 1024, 0);
+        $this->logger->notice('Usercache threshold limit reached. @free Kb free out of @avail Kb available from a total of @total Kb. Cache cleared.', $params);
+        wincache_ucache_clear();
       }
     }
+
   }
 
   /**
@@ -59,9 +61,12 @@ class WincacheShutdown {
    */
   private function wincachedrupal_check_scache() {
     $threshold = 0.1;
+    if (!function_exists('wincache_scache_meminfo')) {
+      return;
+    }
     // Make sure that the session cache is not FULL! Otherwise people will not be able to login anymore...
     $scache_mem_info = wincache_scache_meminfo();
-    if (!empty($ucache_mem_info)) {
+    if (!empty($scache_mem_info)) {
       $scache_available_memory = $scache_mem_info['memory_total'] - $scache_mem_info['memory_overhead'];
       $free_memory_ratio = $scache_mem_info['memory_free'] / $scache_available_memory;
       if ($free_memory_ratio < $threshold) {
