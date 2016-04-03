@@ -38,7 +38,7 @@ class WincacheShutdown {
     $ucache_mem_info = wincache_ucache_meminfo();
     // Under some situations WincacheDrupal will fail to report
     // any data through wincache_ucache_meminfo().
-    if (!empty($ucache_mem_info)) {
+    if (!empty($ucache_mem_info) && $ucache_mem_info['memory_total'] > 0) {
       $ucache_available_memory = $ucache_mem_info['memory_total'] - $ucache_mem_info['memory_overhead'];
       $free_memory_ratio = $ucache_mem_info['memory_free'] / $ucache_available_memory;
       // If free memory is below 10% of total
@@ -66,7 +66,7 @@ class WincacheShutdown {
     }
     // Make sure that the session cache is not FULL! Otherwise people will not be able to login anymore...
     $scache_mem_info = wincache_scache_meminfo();
-    if (!empty($scache_mem_info)) {
+    if (!empty($scache_mem_info) && $scache_mem_info['memory_total'] > 0) {
       $scache_available_memory = $scache_mem_info['memory_total'] - $scache_mem_info['memory_overhead'];
       $free_memory_ratio = $scache_mem_info['memory_free'] / $scache_available_memory;
       if ($free_memory_ratio < $threshold) {
