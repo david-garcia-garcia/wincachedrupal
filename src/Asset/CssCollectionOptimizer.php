@@ -49,7 +49,7 @@ class CssCollectionOptimizer extends \Drupal\Core\Asset\CssCollectionOptimizer {
    * {@inheritdoc}
    */
   public function deleteAll() {
-    if (!$this->netPhp->hasNetPhpSupport()) {
+    if (!($this->netPhp->hasNetPhpSupport() === TRUE)) {
       return parent::deleteAll();
     }
 

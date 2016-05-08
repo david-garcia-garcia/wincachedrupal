@@ -49,7 +49,7 @@ class JsCollectionOptimizer extends \Drupal\Core\Asset\JsCollectionOptimizer {
    * {@inheritdoc}
    */
   public function deleteAll() {
-    if (!$this->netPhp->hasNetPhpSupport()) {
+    if (!($this->netPhp->hasNetPhpSupport() === TRUE)) {
       return parent::deleteAll();
     }
 
