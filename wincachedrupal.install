@@ -59,14 +59,16 @@ function wincachedrupal_requirements($phase) {
 	  // Probably yes, because this is the WincacheDriver!
     $is_windows = strncasecmp(PHP_OS, 'WIN', 3) == 0;
     if ($is_windows) {
-      // Make sure that we are using Wincache OPCODE cache.
-      $opcode_ok = $options['wincache.ocenabled']['local_value'] == 1;
-      $opcode_info = wincache_ocache_meminfo();
-      $requirements['wincache_oc'] = array(
-        'title' => $t('Wincache Opcode cache'),
-        'value' => $opcode_ok ? $t('Opcode cache is being handled by Wincache.') : $t('The Wincache Opcode cache should be enabled. Do not rely on ZEND_OPCACHE, it is unstable on windows platforms.'),
-        'severity' => $opcode_ok ? REQUIREMENT_OK : REQUIREMENT_ERROR,
-      );
+      // As of 2.0, Wincache no longer offers opcache, so add this requirement only for versions 1.x
+      if (preg_match("/^1\./", $wincache_version)) {  // Match strings starting with '1.'
+        // Make sure that we are using Wincache OPCODE cache.
+        $opcode_ok = isset($options['wincache.ocenabled']) && $options['wincache.ocenabled']['local_value'] == 1;
+        $requirements['wincache_oc'] = array(
+          'title' => $t('Wincache Opcode cache'),
+          'value' => $opcode_ok ? $t('Opcode cache is being handled by Wincache.') : $t('The Wincache Opcode cache should be enabled. Do not rely on ZEND_OPCACHE, it is unstable on windows platforms.'),
+          'severity' => $opcode_ok ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+        );
+      }
       // Check that session is provided by Wincache.
       $session_ok = isset($GLOBALS['WINCACHE_SESSION_ACTIVE']) && $GLOBALS['WINCACHE_SESSION_ACTIVE'] == TRUE;
       $session_info = wincache_scache_info(TRUE);
