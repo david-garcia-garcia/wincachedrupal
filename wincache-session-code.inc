@@ -234,11 +234,11 @@ class WincacheSessionHandler extends SessionHandler {
 
     // Nothing to do if we are not allowed to change the session.
     if (!drupal_save_session()) {
-      return;
+      return FALSE;
     }
 
     // Delete session data.
-    parent::destroy($session_id);
+    $res = parent::destroy($session_id);
 
     // Reset $_SESSION and $user to prevent a new session from being started
     // in drupal_session_commit().
@@ -247,6 +247,8 @@ class WincacheSessionHandler extends SessionHandler {
 
     // Unset the session cookies.
     _drupal_session_delete_cookie(session_name());
+
+    return $res;
   }
   
   /**
