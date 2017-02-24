@@ -58,6 +58,9 @@ class JsCollectionOptimizer extends \Drupal\Core\Asset\JsCollectionOptimizer {
     $runtime = $this->netPhp->getRuntime();
     $runtime->RegisterNetFramework4();
     $d = $runtime->TypeFromName("System.IO.DirectoryInfo")->Instantiate(drupal_realpath('public://js'));
+    if (!$d->Exists()->Val()) {
+      return;
+    }
     $search_option = $runtime->TypeFromName("System.IO.SearchOption")->Enum("AllDirectories");
     $threshold = \Drupal::config('system.performance')->get('stale_file_threshold');
     /** @var \NetPhp\Core\NetProxy */
