@@ -252,6 +252,13 @@ class ChainedFastBackend implements DrupalCacheInterface {
   protected function getLastWriteTimestamp() {
     if ($this->lastWriteTimestamp === NULL) {
       $cache = $this->consistentBackend->get(self::LAST_WRITE_TIMESTAMP_PREFIX . $this->bin);
+      // Make sure that the consistent backend returns
+      // what we expect.
+      if ($cache) {
+        if (!is_array($cache->data) || !isset($cache->data['head']) || !isset($cache->data['timestamp'])) {
+          $cache = FALSE;
+        }
+      }
       if ($cache && $cache->data['head'] != $this->headId) {
         $this->lastWriteTimestamp = $cache->data['timestamp'];
       }

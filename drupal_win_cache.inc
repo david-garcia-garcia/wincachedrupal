@@ -25,11 +25,11 @@ class DrupalWinCache implements DrupalCacheInterface {
    * @var string
    */
   private static $test_run_id;
-  
+
   /**
    * Add test prefix to current binary key.
    *
-   * @param string $prefix 
+   * @param string $prefix
    */
   private static function AddTestPrefix(&$prefix) {
     // Try with the "official" test_run_id first.
@@ -47,9 +47,16 @@ class DrupalWinCache implements DrupalCacheInterface {
   /**
    * Name of current binary
    *
-   * @var mixed
+   * @var string
    */
   protected $bin;
+
+  /**
+   * Binary prefix
+
+   * @var string
+   */
+  protected $bin_prefix;
 
   /**
    * The constructor.
@@ -59,7 +66,7 @@ class DrupalWinCache implements DrupalCacheInterface {
    */
   public function __construct($bin) {
     $this->bin = $bin;
-    
+
     // If page_cache_without_database is enabled, we have to manually load the
     // $conf array out of cache_bootstrap.
     static $variables_loaded = FALSE;
@@ -91,8 +98,41 @@ class DrupalWinCache implements DrupalCacheInterface {
         drupal_bootstrap(DRUPAL_BOOTSTRAP_VARIABLES, FALSE);
       }
     }
+    $this->bin_prefix = self::shortHash(drupal_get_hash_salt()) . '|';
+    static::AddTestPrefix($this->bin_prefix);
   }
-  
+
+  /**
+   * Generates a shortened sha256 hash. While there is always the risk of
+   * collision (when different $data generate the same hash), shortened hashes
+   * increase that risk. This function should only be used when that additional
+   * risk is acceptable.
+   *
+   * @param string $data
+   *   Message to be hashed.
+   * @param string $key
+   *   Shared secret key.
+   * @param int $length
+   *   Hash length. Defaults to 10 characters. Maximum 50 characters.
+   *
+   * @return string
+   *   A sha256 base 36 encoded shortened hash.
+   *
+   * @throws \InvalidArgumentException
+   *   When the $length argument is longer than 50.
+   */
+  public static function shortHash($data, $key = NULL, $length = 10) {
+    if ($length > 50) {
+      throw new \InvalidArgumentException(sprintf('shortHash length %s is longer than the maximum allowed of 50.', $length));
+    }
+    if ($key) {
+      return substr(base_convert(hash_hmac('sha256', $data, $key), 16, 36), 0, $length);
+    }
+    else {
+      return substr(base_convert(hash('sha256', $data), 16, 36), 0, $length);
+    }
+  }
+
   /**
    * Function which retrieves the safe key for the cache bin.
    *
@@ -100,17 +140,7 @@ class DrupalWinCache implements DrupalCacheInterface {
    *   The safe WinCache key.
    */
   protected function binKey() {
-    // This method used to generate a key depending on $SERVER['HOST']
-    // but was refactored to align it to Memcache behaviour.
-    // @see https://www.drupal.org/node/2426825
-    $prefix = '';
-    if ($prefix = $this->variable_get('wincache_key_prefix', '')) {
-      $prefix .= '|';
-    }
-    // When simpletest is running, emulate the simpletest database prefix here
-    // to avoid the child site setting cache entries in the parent site (or the other way round).
-    static::AddTestPrefix($prefix);
-    return $prefix . $this->bin . '|';
+    return $this->bin_prefix . $this->bin . '|';
   }
 
   /**
@@ -323,7 +353,7 @@ class DrupalWinCache implements DrupalCacheInterface {
     }
     return $set_result;
   }
-  
+
   /**
    * Adds a variable in user cache only if variable does not already exist in the cache.
    *
@@ -487,14 +517,14 @@ class DrupalWinCache implements DrupalCacheInterface {
     $matches = preg_grep('/^' . preg_quote($this->binKey()) . '/', $items);
     return empty($matches);
   }
-  
+
   /**
    * variable_get wrapper.
    */
   private function variable_get($name, $default = NULL) {
     return variable_get($name, $default);
   }
-  
+
   /**
    * Re-implementation of variable_set() that writes through instead of clearing.
    *
@@ -502,7 +532,7 @@ class DrupalWinCache implements DrupalCacheInterface {
    */
   private function variable_set($name, $value) {
     global $conf;
-    
+
     // We need to have at least bootstrapped up to Database.
     if (drupal_bootstrap(NULL, FALSE) < DRUPAL_BOOTSTRAP_DATABASE) {
       drupal_bootstrap(DRUPAL_BOOTSTRAP_DATABASE, FALSE);
@@ -532,7 +562,7 @@ class DrupalWinCache implements DrupalCacheInterface {
     // If the variables aren't cached, there's no need to do anything.
     $conf[$name] = $value;
   }
-  
+
   /**
    * Helper function to load locking framework if not already loaded.
    *
@@ -558,5 +588,5 @@ class DrupalWinCache implements DrupalCacheInterface {
 
     return TRUE;
   }
-  
+
 }
