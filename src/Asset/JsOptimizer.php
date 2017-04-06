@@ -51,7 +51,6 @@ class JsOptimizer extends CoreOptimizer {
     $data = parent::optimize($js_asset);
     if ($this->minifier) {
       $data = $this->minifier->MinifyJavaScript($data, $this->codeSettings)->Val();
-      $data = utf8_encode($data);
     }
     return $data;
   }

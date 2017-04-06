@@ -66,7 +66,6 @@ class CssOptimizer extends CoreOptimizer {
     $contents = parent::processCss($contents, FALSE);
     if ($this->minifier) {
       $contents = $this->minifier->MinifyStyleSheet($contents, $this->cssSettings, $this->codeSettings)->Val();
-      $contents = utf8_encode($contents);
     }
     return $contents;
   }
