@@ -2,16 +2,17 @@
 
 namespace Drupal\wincachedrupal;
 
-use \Psr\Log\LoggerInterface;
-
+/**
+ * WincacheShutdown class.
+ */
 class WincacheShutdown {
 
   /**
    * Logger channel.
    *
-   * @var LoggerInterface
+   * @var \Psr\Log\LoggerInterface
    */
-  var $logger;
+  public $logger;
 
   /**
    * Some shutdown verifications.
@@ -20,17 +21,18 @@ class WincacheShutdown {
 
     $this->logger = \Drupal::logger('wincachedrupal');
 
-    static::wincachedrupal_check_scache();
-    static::wincachedrupal_check_ucache();
+    static::wincachedrupalCheckScache();
+    static::wincachedrupalCheckUcache();
   }
 
   /**
-   * Check the status of the user cache, and if full,
-   * clear data.
+   * Checks user cache.
+   *
+   * If user cache is full, it is also clears the user cache.
    */
-  private function wincachedrupal_check_ucache() {
+  private function wincachedrupalCheckUcache() {
     $threshold = 0.1;
-    // Make sure that the user cache is not FULL
+    // Make sure that the user cache is not FULL.
     $user_cache_available = function_exists('wincache_ucache_info') && !strcmp(ini_get('wincache.ucenabled'), "1");
     if (!$user_cache_available) {
       return;
@@ -44,7 +46,7 @@ class WincacheShutdown {
       // If free memory is below 10% of total
       // do a cache wipe!
       if ($free_memory_ratio < $threshold) {
-        $params = array();
+        $params = [];
         $params["@free"] = round($ucache_mem_info['memory_free'] / 1024, 0);
         $params["@total"] = round($ucache_mem_info['memory_total'] / 1024, 0);
         $params["@avail"] = round($ucache_available_memory / 1024, 0);
@@ -56,15 +58,17 @@ class WincacheShutdown {
   }
 
   /**
-   * Check the status of the session cache and if full,
-   * clear sessions.
+   * Checks session cache.
+   *
+   * If session cache is full, it also clears the session cache.
    */
-  private function wincachedrupal_check_scache() {
+  private function wincachedrupalCheckScache() {
     $threshold = 0.1;
     if (!function_exists('wincache_scache_meminfo')) {
       return;
     }
-    // Make sure that the session cache is not FULL! Otherwise people will not be able to login anymore...
+    // Make sure that the session cache is not FULL! Otherwise people will not
+    // be able to login anymore...
     $scache_mem_info = wincache_scache_meminfo();
     if (!empty($scache_mem_info) && $scache_mem_info['memory_total'] > 0) {
       $scache_available_memory = $scache_mem_info['memory_total'] - $scache_mem_info['memory_overhead'];
@@ -92,7 +96,7 @@ class WincacheShutdown {
           session_id($current_id);
           session_start();
         }
-        $params = array();
+        $params = [];
         $params["@free"] = round($scache_mem_info['memory_free'] / 1024, 0);
         $params["@total"] = round($scache_mem_info['memory_total'] / 1024, 0);
         $params["@avail"] = round($scache_available_memory / 1024, 0);
@@ -100,4 +104,5 @@ class WincacheShutdown {
       }
     }
   }
+
 }

@@ -1,14 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\wincachedrupal\Lock\wincachedrupalLockBackend.
- */
-
 namespace Drupal\wincachedrupal\Lock;
-
-use Drupal\Core\Database\Connection;
-use Drupal\Core\Database\IntegrityConstraintViolationException;
 
 use Drupal\Core\Lock\LockBackendAbstract;
 
@@ -25,18 +17,17 @@ class WincacheLockBackend extends LockBackendAbstract {
   /**
    * Cache storage.
    *
-   * @var WincacheBackend
+   * @var \Drupal\wincachedrupal\Cache\WincacheBackend
    */
   protected $cache;
 
   /**
    * Constructs a new WincacheLockBackend.
-   *
    */
   public function __construct() {
     // __destruct() is causing problems with garbage collections, register a
     // shutdown function instead.
-    drupal_register_shutdown_function(array($this, 'releaseAll'));
+    drupal_register_shutdown_function([$this, 'releaseAll']);
     $this->cache = new WincacheBackend('semaphore', '', new DummyTagChecksum());
     // Initialize the lock id.
     $this->getLockId();
@@ -59,8 +50,8 @@ class WincacheLockBackend extends LockBackendAbstract {
       $this->cache->set($name, $this->lockId, $expire);
     }
     else {
-      // Failed to acquire the lock.  Unset the key from the $this->locks array even if
-      // not set, PHP 5+ allows this without error or warning.
+      // Failed to acquire the lock.  Unset the key from the $this->locks array
+      // even if not set, PHP 5+ allows this without error or warning.
       unset($this->locks[$name]);
     }
 
@@ -95,7 +86,7 @@ class WincacheLockBackend extends LockBackendAbstract {
       if (empty($lockId)) {
         $lockId = $this->getLockId();
       }
-      $clears = array();
+      $clears = [];
       foreach ($this->locks as $name => $id) {
         if ($cache = $this->cache->get($name)) {
           $value = $cache->data;
@@ -104,8 +95,9 @@ class WincacheLockBackend extends LockBackendAbstract {
           }
         }
       }
-      $this->locks = array();
+      $this->locks = [];
       $this->cache->deleteMultiple($clears);
     }
   }
+
 }

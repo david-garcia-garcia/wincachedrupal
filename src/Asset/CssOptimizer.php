@@ -1,13 +1,8 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\wincachedrupal\Asset\CssOptimizer.
- */
-
 namespace Drupal\wincachedrupal\Asset;
 
-use Drupal\Component\Utility\Unicode;
+use Drupal\wincachedrupal\NetPhp;
 use Drupal\Core\Asset\CssOptimizer as CoreOptimizer;
 
 /**
@@ -49,7 +44,7 @@ class CssOptimizer extends CoreOptimizer {
    * @param \Drupal\wincachedrupal\NetPhp $netphp
    *   NetPhp instance.
    */
-  public function __construct(\Drupal\wincachedrupal\NetPhp $netphp) {
+  public function __construct(NetPhp $netphp) {
     if ($this->minifier = $netphp->getMinifier()) {
       $this->netPhp = $netphp;
       $runtime = $this->netPhp->getRuntime();
@@ -61,7 +56,7 @@ class CssOptimizer extends CoreOptimizer {
   }
 
   /**
-   * {@inhertidoc}
+   * {@inheritdoc}
    */
   protected function processCss($contents, $optimize = FALSE) {
     $contents = parent::processCss($contents, FALSE);
@@ -70,4 +65,5 @@ class CssOptimizer extends CoreOptimizer {
     }
     return $contents;
   }
+
 }

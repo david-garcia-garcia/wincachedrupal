@@ -1,13 +1,8 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\wincachedrupal\Asset\JsOptimizer.
- */
-
 namespace Drupal\wincachedrupal\Asset;
 
-use Drupal\Component\Utility\Unicode;
+use Drupal\wincachedrupal\NetPhp;
 use Drupal\Core\Asset\JsOptimizer as CoreOptimizer;
 
 /**
@@ -30,11 +25,12 @@ class JsOptimizer extends CoreOptimizer {
   protected $minifier;
 
   /**
-   * Returns an instance of JsOptimizer
+   * Returns an instance of JsOptimizer.
    *
-   * @param JsOptimizer $netphp
+   * @param \Drupal\wincachedrupal\NetPhp $netphp
+   *   NetPhp instance.
    */
-  public function __construct(\Drupal\wincachedrupal\NetPhp $netphp) {
+  public function __construct(NetPhp $netphp) {
     if ($this->minifier = $netphp->getMinifier()) {
       $runtime = $netphp->getRuntime();
       $this->codeSettings = $runtime->TypeFromName("Microsoft.Ajax.Utilities.CodeSettings")->Instantiate();
@@ -54,4 +50,5 @@ class JsOptimizer extends CoreOptimizer {
     }
     return $data;
   }
+
 }

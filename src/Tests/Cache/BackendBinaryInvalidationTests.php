@@ -5,9 +5,7 @@ namespace Drupal\wincachedrupal\Tests\Cache;
 use Drupal\KernelTests\KernelTestBase;
 
 use Drupal\wincachedrupal\Cache\WincacheBackendFactory;
-use Drupal\wincachedrupal\Cache\WincacheRawBackendFactory;
 use Drupal\supercache\Cache\DummyTagChecksum;
-
 
 /**
  * Testea funciones basicas.
@@ -15,34 +13,29 @@ use Drupal\supercache\Cache\DummyTagChecksum;
  * @group Cache
  */
 class BackendBinaryInvalidationTests extends KernelTestBase {
-  
-  public function setUp() {
-    parent::setUp();
-  }
 
   /**
-   * Make sure that invalidations and garbage collection
-   * works fine.
+   * Make sure that invalidations and garbage collection works fine.
    */
   public function testInvalidations() {
 
     $data1 = [
-        'a' => ['data' => 'b'],
-        'b' => ['data' => 'b'],
-        'v' => ['data' => 'b'],
-        'd' => ['data' => 'b'],
-        'e' => ['data' => 'b'],
-      ];
+      'a' => ['data' => 'b'],
+      'b' => ['data' => 'b'],
+      'v' => ['data' => 'b'],
+      'd' => ['data' => 'b'],
+      'e' => ['data' => 'b'],
+    ];
 
     $data2 = [
-        'a' => ['data' => 'b2'],
-        'b' => ['data' => 'b2'],
-        'v' => ['data' => 'b2'],
-        'd' => ['data' => 'b2'],
-        'e' => ['data' => 'b2'],
-      ];
+      'a' => ['data' => 'b2'],
+      'b' => ['data' => 'b2'],
+      'v' => ['data' => 'b2'],
+      'd' => ['data' => 'b2'],
+      'e' => ['data' => 'b2'],
+    ];
 
-    $factory = new WincacheBackendFactory('','', new DummyTagChecksum());
+    $factory = new WincacheBackendFactory('', '', new DummyTagChecksum());
 
     $backend = $factory->get('bootstrap');
 
@@ -62,7 +55,7 @@ class BackendBinaryInvalidationTests extends KernelTestBase {
 
     $backend->garbageCollection();
     $this->assertEquals(0, count($backend->getAllKeysWithPrefix($firstPrefix)), 'Correct number of items returned.');
-    
+
     // Invalidate all after a garbage collection
     // that had a higher counter should reset
     // the prefix to 0.

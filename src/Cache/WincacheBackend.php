@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\wincachedrupal\Cache\Cache\wincachedrupalBackend.
- */
-
 namespace Drupal\wincachedrupal\Cache;
 
 use Drupal\Core\Cache\CacheBackendInterface;
@@ -56,14 +51,14 @@ class WincacheBackend extends WincacheBackendGeneric implements CacheBackendInte
    */
   public function getMultiple(&$cids, $allow_invalid = FALSE) {
     // Translate the requested cache item IDs to Wincache keys.
-    $map = array();
+    $map = [];
     foreach ($cids as $cid) {
       $map[$this->getBinKey($cid)] = $cid;
     }
 
     $success = FALSE;
     $result = wincache_ucache_get(array_keys($map), $success);
-    $cache = array();
+    $cache = [];
     if ($success == TRUE) {
       foreach ($result as $key => $item) {
         $item = $this->prepareItem($item, $allow_invalid);
@@ -84,9 +79,9 @@ class WincacheBackend extends WincacheBackendGeneric implements CacheBackendInte
    * Wincache is a memory cache, shared across all server processes. To prevent
    * cache item clashes with other applications/installations, every cache item
    * is prefixed with a unique string for this site. Therefore, functions like
-   * wincache_ucache_clear() cannot be used, and instead, a list of all cache items
-   * belonging to this application need to be retrieved through this method
-   * instead.
+   * wincache_ucache_clear() cannot be used, and instead, a list of all cache
+   * items belonging to this application need to be retrieved through this
+   * method instead.
    *
    * @param string $prefix
    *   (optional) A cache ID prefix to limit the result to.
@@ -102,22 +97,24 @@ class WincacheBackend extends WincacheBackendGeneric implements CacheBackendInte
 
   /**
    * Return all keys of cached items.
-   * 
-   * @param string $prefix 
+   *
+   * @param string $prefix
+   *   Prefix to match againsts keys.
+   *
    * @return array
+   *   An array of cached items.
    */
   public function getAllKeys($prefix = '') {
     $key = $this->getBinKey($prefix);
     return $this->getAllKeysWithPrefix($key);
   }
 
-
   /**
    * Prepares a cached item.
    *
    * Checks that the item is either permanent or did not expire.
    *
-   * @param \stdClass $cache
+   * @param object $cache
    *   An item loaded from cache_get() or cache_get_multiple().
    * @param bool $allow_invalid
    *   If TRUE, a cache item may be returned even if it is expired or has been
@@ -131,7 +128,7 @@ class WincacheBackend extends WincacheBackendGeneric implements CacheBackendInte
       return FALSE;
     }
 
-    $cache->tags = $cache->tags ? explode(' ', $cache->tags) : array();
+    $cache->tags = $cache->tags ? explode(' ', $cache->tags) : [];
 
     // Check expire time.
     $cache->valid = $cache->expire == Cache::PERMANENT || $cache->expire >= $this->requestTime;
@@ -169,21 +166,30 @@ class WincacheBackend extends WincacheBackendGeneric implements CacheBackendInte
   /**
    * {@inheritdoc}
    */
-  public function set($cid, $data, $expire = CacheBackendInterface::CACHE_PERMANENT, array $tags = array()) {
+  public function set($cid, $data, $expire = CacheBackendInterface::CACHE_PERMANENT, array $tags = []) {
     $cache = $this->prepareCacheItem($cid, $data, $expire, $tags);
     $this->wincacheSet($this->getBinKey($cid), $cache, $expire);
   }
 
-
   /**
    * Like set() but will fail if the item already exists in the cache.
-   * 
-   * @param mixed $cid 
-   * @param mixed $data 
-   * @param mixed $expire 
-   * @param array $tags 
+   *
+   * @param mixed $cid
+   *   The cache ID of the data to add.
+   * @param mixed $data
+   *   The data to store in the cache.
+   * @param mixed $expire
+   *   One of the following values:
+   *   - CacheBackendInterface::CACHE_PERMANENT: Indicates that the item should
+   *     not be removed unless it is deleted explicitly.
+   *   - A Unix timestamp: Indicates that the item will be considered invalid
+   *     after this time, i.e. it will not be returned by get() unless
+   *     $allow_invalid has been set to TRUE. When the item has expired, it may
+   *     be permanently deleted by the garbage collector at any time.
+   * @param array $tags
+   *   An array of tags to be stored with the cache item.
    */
-  public function add($cid, $data, $expire = CacheBackendInterface::CACHE_PERMANENT, array $tags = array()) {
+  public function add($cid, $data, $expire = CacheBackendInterface::CACHE_PERMANENT, array $tags = []) {
     $cache = $this->prepareCacheItem($cid, $data, $expire, $tags);
     return $this->wincacheAdd($cid, $cache, $expire);
   }
@@ -191,9 +197,9 @@ class WincacheBackend extends WincacheBackendGeneric implements CacheBackendInte
   /**
    * {@inheritdoc}
    */
-  public function setMultiple(array $items = array()) {
+  public function setMultiple(array $items = []) {
     foreach ($items as $cid => $item) {
-      $this->set($cid, $item['data'], isset($item['expire']) ? $item['expire'] : CacheBackendInterface::CACHE_PERMANENT, isset($item['tags']) ? $item['tags'] : array());
+      $this->set($cid, $item['data'], isset($item['expire']) ? $item['expire'] : CacheBackendInterface::CACHE_PERMANENT, isset($item['tags']) ? $item['tags'] : []);
     }
   }
 
@@ -208,7 +214,7 @@ class WincacheBackend extends WincacheBackendGeneric implements CacheBackendInte
    * {@inheritdoc}
    */
   public function deleteMultiple(array $cids) {
-    wincache_ucache_delete(array_map(array($this, 'getBinKey'), $cids));
+    wincache_ucache_delete(array_map([$this, 'getBinKey'], $cids));
   }
 
   /**
@@ -252,4 +258,5 @@ class WincacheBackend extends WincacheBackendGeneric implements CacheBackendInte
   public function garbageCollection() {
     parent::garbageCollectInvalidations();
   }
+
 }

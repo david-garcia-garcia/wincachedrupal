@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\wincachedrupal\Cache\wincachedrupalBackendFactory.
- */
-
 namespace Drupal\wincachedrupal\Cache;
 
 use Drupal\Core\Site\Settings;
@@ -12,6 +7,9 @@ use Drupal\Core\Site\Settings;
 use Drupal\Core\Cache\CacheFactoryInterface;
 use Drupal\Core\Cache\CacheTagsChecksumInterface;
 
+/**
+ * Implements the WinCacheBackend cache factory classes.
+ */
 class WincacheBackendFactory implements CacheFactoryInterface {
 
   /**
@@ -46,7 +44,7 @@ class WincacheBackendFactory implements CacheFactoryInterface {
   /**
    * Gets WincacheBackend for the specified cache bin.
    *
-   * @param $bin
+   * @param string $bin
    *   The cache bin for which the object is created.
    *
    * @return WincacheBackend
@@ -55,4 +53,5 @@ class WincacheBackendFactory implements CacheFactoryInterface {
   public function get($bin) {
     return new WincacheBackend($bin, $this->sitePrefix, $this->checksumProvider);
   }
+
 }

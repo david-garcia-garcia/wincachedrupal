@@ -1,11 +1,18 @@
 <?php
 
 /**
+ * @file
+ * WinCacheDrupal install functions.
+ */
+
+use Drupal\wincachedrupal\Installer;
+
+/**
  * Implements hook_requirements().
  */
 function wincachedrupal_requirements($phase) {
   if ($phase == 'runtime') {
-    $installer = new \Drupal\wincachedrupal\Installer();
+    $installer = new Installer();
     return $installer->requirements($phase);
   }
   return [];

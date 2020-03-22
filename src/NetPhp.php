@@ -1,11 +1,8 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\wincachedrupal\NetPhp.
- */
-
 namespace Drupal\wincachedrupal;
+
+use NetPhp\Core\NetPhpRuntime;
 
 /**
  * Class to retain a single .Net runtime.
@@ -13,14 +10,14 @@ namespace Drupal\wincachedrupal;
 class NetPhp {
 
   /**
-   * The NetPhp Manager
+   * The NetPhp Manager.
    *
    * @var \NetPhp\Core\NetPhpRuntime
    */
   protected $runtime;
 
   /**
-   * The NetPhp Manager
+   * The NetPhp Manager.
    *
    * @var \NetPhp\Core\NetProxy
    */
@@ -39,24 +36,25 @@ class NetPhp {
    * @var array
    */
   protected $status = [
-      'com_enabled' => FALSE,
-      'netphp' => FALSE,
-    ];
+    'com_enabled' => FALSE,
+    'netphp' => FALSE,
+  ];
 
   /**
-   * Returns TRUE or FALSE
+   * Returns if COM enabled.
    *
-   * @return string
+   * @return bool
+   *   Is COM enabled.
    */
   public function hasComSupport() {
     return $this->status['com_enabled'];
   }
 
   /**
-   * Returns TRUE or the error message obtained
-   * while trying to the the NetPhp instance.
+   * Determines if NetPhp is suppoerted.
    *
-   * @return TRUE|string
+   * @return true|string
+   *   The error message obtained while trying to access the NetPhp instance.
    */
   public function hasNetPhpSupport() {
     return $this->status['netphp'];
@@ -64,9 +62,8 @@ class NetPhp {
 
   /**
    * Gets a NetPhp instance.
-   *
    */
-  function __construct() {
+  public function __construct() {
 
     // Check if extension loaded.
     if (!extension_loaded('com_dotnet')) {
@@ -82,11 +79,11 @@ class NetPhp {
     $this->status['com_enabled'] = TRUE;
 
     try {
-      if (!class_exists(\NetPhp\Core\NetPhpRuntime::class)) {
+      if (!class_exists(NetPhpRuntime::class)) {
         $this->status['netphp'] = 'NetPhpRuntime class not found. Make sure you run composer drupal-update.';
         return;
       }
-      $this->runtime = new \NetPhp\Core\NetPhpRuntime('COM', '{2BF990C8-2680-474D-BDB4-65EEAEE0015F}');
+      $this->runtime = new NetPhpRuntime('COM', '{2BF990C8-2680-474D-BDB4-65EEAEE0015F}');
       $this->runtime->Initialize();
       $this->status['netphp'] = TRUE;
     }
@@ -97,21 +94,20 @@ class NetPhp {
   }
 
   /**
-   * Summary of getRuntime
+   * Summary of getRuntime.
    *
    * @return \NetPhp\Core\NetPhpRuntime
+   *   NetPhp runtime.
    */
   public function getRuntime() {
     return $this->runtime;
   }
 
-  #region Minifier
-
   /**
-   * Returns TRUE if there is support,
-   * or the error string if not.
+   * Determines if AjaxMin is supported.
    *
-   * @return TRUE|string
+   * @return true|string
+   *   The error string if AjaxMin is not supported.
    */
   public function hasAjaxMinSupport() {
     $this->getMinifier();
@@ -119,18 +115,19 @@ class NetPhp {
   }
 
   /**
-   * Get the path where the AjaxMin library should
-   * be deployed.
+   * Get the path where the AjaxMin library should be deployed.
    *
    * @return string
+   *   The real path to teh AjaxMin.dll.
    */
   public function ajaxMinPath() {
     return 'libraries/_bin/ajaxmin/AjaxMin.dll';
   }
 
   /**
-   * Asset optimizations depeend on the minifier
-   * so let's make this part of the main service.
+   * Makes minifier part of the main service.
+   *
+   * Asset optimizations depend on the minifier.
    */
   public function getMinifier() {
 
@@ -147,7 +144,7 @@ class NetPhp {
 
     $path = \Drupal::service('file_system')->realpath($this->ajaxMinPath());
 
-    // The file must be in libraries/_bin/ajaxmin
+    // The file must be in libraries/_bin/ajaxmin.
     if ($path == FALSE) {
       $this->ajaxminSupport = "File not found: {$this->ajaxMinPath()}";
       return NULL;
@@ -165,7 +162,5 @@ class NetPhp {
     $this->ajaxminSupport = TRUE;
     return $this->minifier;
   }
-
-  #endregion
 
 }

@@ -1,13 +1,7 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\wincachedrupal\Cache\wincachedrupalFileCacheBackend.
- */
-
 namespace Drupal\wincachedrupal\Cache;
 
-use Drupal\Component\FileCache\FileCache;
 use Drupal\Component\FileCache\FileCacheBackendInterface;
 
 /**

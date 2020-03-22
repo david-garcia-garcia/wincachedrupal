@@ -4,11 +4,13 @@ namespace Drupal\wincachedrupal\Cache;
 
 use Drupal\Core\Cache\CacheBackendInterface;
 
+/**
+ * WincacheBackendTrait.
+ */
 trait WincacheBackendTrait {
 
   /**
-   * Current time used to validate
-   * cache item expiration times.
+   * Current time used to validate cache item expiration times.
    *
    * @var int
    */
@@ -24,13 +26,16 @@ trait WincacheBackendTrait {
   protected $binPrefix;
 
   /**
-   * Returns a 12 character length MD5.
+   * Creates a short MD5 checksum (12 characters).
    *
    * @param string $string
+   *   The string to hash.
+   *
    * @return string
+   *   The first 12 characters of the MD5 checksum.
    */
   public function shortMd5($string) {
-    return substr(base_convert(md5($string), 16,32), 0, 12);
+    return substr(base_convert(md5($string), 16, 32), 0, 12);
   }
 
   /**
@@ -64,7 +69,9 @@ trait WincacheBackendTrait {
    */
   protected function wincacheAdd($cid, $data, $expire) {
     $result = FALSE;
-    set_error_handler(function() { /* Prevent Drupal from logging any exceptions or warning thrown here */ }, E_ALL);
+    set_error_handler(function () {
+      /* Prevent Drupal from logging any exceptions or warning thrown here */
+    }, E_ALL);
     if ($ttl = $this->getTtl($expire)) {
       $result = @wincache_ucache_add($cid, $data, $ttl);
     }
@@ -76,16 +83,19 @@ trait WincacheBackendTrait {
   }
 
   /**
-   * The Cache API uses a unixtimestamp to set
-   * expiration. But Wincache expects a TTL.
+   * Cache API coversion.
+   *
+   * The Cahce API uses a timestamps to set expiration.
+   * But Wincache expects a TTL.
    *
    * @param int $expire
    *   The unix timestamp expiration or -1 for no expire.
    */
   protected function getTtl($expire) {
     if ($expire == CacheBackendInterface::CACHE_PERMANENT) {
-      // If no ttl is supplied (or if the ttl is 0), the value will persist until 
-      // it is removed from the cache manually, or otherwise fails to exist in the cache (clear, restart, etc.).
+      // If no ttl is supplied (or if the ttl is 0), the value will persist
+      // until it is removed from the cache manually, or otherwise fails to
+      // exist in the cache (clear, restart, etc.).
       return FALSE;
     }
     $result = $expire - time();
@@ -97,18 +107,20 @@ trait WincacheBackendTrait {
   }
 
   /**
-   * Retrieve all keys in wincache
-   * that start with a given prefix.
+   * Retrieve all keys in wincache that start with a given prefix.
    *
    * @param string $prefix
    *   The prefix keys should start with.
+   *
    * @return array
+   *   The matching keys.
    */
   public function getAllKeysWithPrefix($prefix) {
     $data = wincache_ucache_info();
     $k = array_column($data['ucache_entries'], 'key_name');
     $keys = preg_grep("/^$prefix/", $k);
     $keys = preg_replace("/^$prefix/", '', $keys);
+
     return $keys;
   }
 
@@ -145,4 +157,5 @@ trait WincacheBackendTrait {
   protected function getBinKey($cid) {
     return $this->binPrefix . $cid;
   }
+
 }

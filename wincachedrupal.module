@@ -1,5 +1,13 @@
 <?php
 
+/**
+ * @file
+ * WinCacheDrupal module functions.
+ */
+
+/**
+ * Implements hook_cron().
+ */
 function wincachedrupal_cron() {
   $keyvalue = Drupal::keyValue('wincachedrupal');
   $lastrun = $keyvalue->get('cron_last_run', 0);

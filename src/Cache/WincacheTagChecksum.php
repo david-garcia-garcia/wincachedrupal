@@ -1,24 +1,15 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\wincachedrupal\Cache\wincachedrupalTagChecksum.
- */
-
 namespace Drupal\wincachedrupal\Cache;
-
-use Drupal\Core\Database\Connection;
-use Drupal\Core\Database\SchemaObjectExistsException;
 
 use Drupal\Core\Cache\CacheTagsChecksumInterface;
 use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 
 /**
  * Cache tags invalidations checksum implementation that uses wincache.
- * 
- * Experimental: tags cannot be shared accross applications + this storage is volatile so
- * this should be used carefully, or not used at all.
- * 
+ *
+ * Experimental: tags cannot be shared accross applications + this storage is
+ * volatile so this should be used carefully, or not used at all.
  */
 class WincacheTagChecksum implements CacheTagsChecksumInterface, CacheTagsInvalidatorInterface {
 
@@ -27,7 +18,7 @@ class WincacheTagChecksum implements CacheTagsChecksumInterface, CacheTagsInvali
    *
    * @var array
    */
-  protected $tagCache = array();
+  protected $tagCache = [];
 
   /**
    * A list of tags that have already been invalidated in this request.
@@ -36,11 +27,10 @@ class WincacheTagChecksum implements CacheTagsChecksumInterface, CacheTagsInvali
    *
    * @var array
    */
-  protected $invalidatedTags = array();
+  protected $invalidatedTags = [];
 
   /**
    * Constructs a WincacheTagChecksum object.
-   *
    */
   public function __construct() {
   }
@@ -101,7 +91,8 @@ class WincacheTagChecksum implements CacheTagsChecksumInterface, CacheTagsInvali
       $keys = preg_filter('/^/', 'cache_tag::', $tags);
       $stored_tags = wincache_ucache_get($keys);
       $this->tagCache += $stored_tags;
-      // Fill static cache with empty objects for tags not found in the database.
+      // Fill static cache with empty objects for tags not found in the
+      // database.
       $this->tagCache += array_fill_keys(array_diff($missing_tags, array_keys($stored_tags)), 0);
     }
 
@@ -113,7 +104,8 @@ class WincacheTagChecksum implements CacheTagsChecksumInterface, CacheTagsInvali
    * {@inheritdoc}
    */
   public function reset() {
-    $this->tagCache = array();
-    $this->invalidatedTags = array();
+    $this->tagCache = [];
+    $this->invalidatedTags = [];
   }
+
 }

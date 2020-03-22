@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\wincachedrupal\Cache\WincacheRawBackend.
- */
-
 namespace Drupal\wincachedrupal\Cache;
 
 use Drupal\supercache\Cache\CacheRawBackendInterface;
@@ -43,13 +38,13 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
    */
   public function getMultiple(&$cids) {
     // Translate the requested cache item IDs to APCu keys.
-    $map = array();
+    $map = [];
     foreach ($cids as $cid) {
       $map[$this->getBinKey($cid)] = $cid;
     }
 
     $result = wincache_ucache_get(array_keys($map));
-    $cache = array();
+    $cache = [];
     if ($result) {
       foreach ($result as $key => $item) {
         $item = $this->prepareItem($key, $item);
@@ -89,6 +84,7 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
    *
    * @param string $prefix
    *   (optional) A cache ID prefix to limit the result to.
+   *
    * @return array
    *   An array containing matched keys.
    */
@@ -107,11 +103,11 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
    * @param mixed $data
    *   An item retrieved from the cache.
    *
-   * @return \stdClass
+   * @return object
    *   The cache item as a Drupal cache object.
    */
   protected function prepareItem($cid, $data) {
-    return (object) array('data' => $data, 'cid' => $cid);
+    return (object) ['data' => $data, 'cid' => $cid];
   }
 
   /**
@@ -124,7 +120,7 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
   /**
    * {@inheritdoc}
    */
-  public function setMultiple(array $items = array()) {
+  public function setMultiple(array $items = []) {
     foreach ($items as $cid => $item) {
       $this->set($cid, $item['data'], isset($item['expire']) ? $item['expire'] : CacheRawBackendInterface::CACHE_PERMANENT);
     }
@@ -141,7 +137,7 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
    * {@inheritdoc}
    */
   public function deleteMultiple(array $cids) {
-    wincache_ucache_delete(array_map(array($this, 'getBinKey'), $cids));
+    wincache_ucache_delete(array_map([$this, 'getBinKey'], $cids));
   }
 
   /**

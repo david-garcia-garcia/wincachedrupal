@@ -2,13 +2,16 @@
 
 namespace Drupal\wincachedrupal\Tests\Cache;
 
-use Drupal\supercache\Tests\Generic\Cache\BackendGeneralTestCase;
-
 use Drupal\wincachedrupal\Cache\WincacheRawBackendFactory;
-use Drupal\supercache\Cache\DummyTagChecksum;
 
+/**
+ * Tests WincacheRawBackend trit.
+ */
 trait RawBackendGeneralTestCaseTrait {
 
+  /**
+   * {@inheritdoc}
+   */
   public function setUp() {
     wincache_ucache_clear();
     $app_root = '/';
@@ -20,9 +23,6 @@ trait RawBackendGeneralTestCaseTrait {
     $this->backend2 = $factory->get('test_binary_alt');
 
     parent::setUp();
-  }
-
-  public function tearDown() {
   }
 
 }

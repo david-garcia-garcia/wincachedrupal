@@ -3,15 +3,18 @@
 namespace Drupal\wincachedrupal;
 
 use Symfony\Component\HttpKernel\Event\PostResponseEvent;
-use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 
+/**
+ * Wincache event Subscriber.
+ */
 class EventSubscriber implements EventSubscriberInterface {
 
-  public function onKernelTerminate(PostResponseEvent  $event) {
+  /**
+   * Response to Kernel Terminate.
+   */
+  public function onKernelTerminate(PostResponseEvent $event) {
     $sh = new WincacheShutdown();
     $sh->shutdown();
   }
@@ -20,7 +23,8 @@ class EventSubscriber implements EventSubscriberInterface {
    * {@inheritdoc}
    */
   public static function getSubscribedEvents() {
-    $events[KernelEvents::TERMINATE][] = array('onKernelTerminate', -100);
+    $events[KernelEvents::TERMINATE][] = ['onKernelTerminate', -100];
     return $events;
   }
+
 }
