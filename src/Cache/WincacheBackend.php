@@ -10,6 +10,7 @@ namespace Drupal\wincachedrupal\Cache;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Cache\CacheTagsChecksumInterface;
 use Drupal\Core\Cache\Cache;
+use Drupal\Component\Assertion\Inspector;
 
 /**
  * Stores cache items in the Alternative PHP Cache User Cache (APCu).
@@ -147,8 +148,11 @@ class WincacheBackend extends WincacheBackendGeneric implements CacheBackendInte
     return $cache;
   }
 
-  protected function prepareCacheItem($cid, $data, $expire, array $tags = array()) {
-    Cache::validateTags($tags);
+  /**
+   * {@inheritdoc}
+   */
+  protected function prepareCacheItem($cid, $data, $expire, array $tags = []) {
+    assert(Inspector::assertAllStrings($tags), 'Cache tags must be strings.');
     $tags = array_unique($tags);
     $cache = new \stdClass();
     $cache->cid = $cid;
