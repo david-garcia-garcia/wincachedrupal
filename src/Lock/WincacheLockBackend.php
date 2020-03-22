@@ -24,7 +24,7 @@ class WincacheLockBackend extends LockBackendAbstract {
 
   /**
    * Cache storage.
-   * 
+   *
    * @var WincacheBackend
    */
   protected $cache;
@@ -54,17 +54,17 @@ class WincacheLockBackend extends LockBackendAbstract {
     if ($this->cache->add($name, $this->lockId, $timeout + time())) {
       $this->locks[$name] = $this->lockId;
     }
-    elseif (($result = $this->cache->get($name)) && isset($locks[$name]) && $this->locks[$name] == $result->data) {
+    elseif (($result = $this->cache->get($name)) && isset($this->locks[$name]) && $this->locks[$name] == $result->data) {
       // Only renew the lock if we already set it and it has not expired.
       $this->cache->set($name, $this->lockId, $expire);
     }
     else {
-      // Failed to acquire the lock.  Unset the key from the $locks array even if
+      // Failed to acquire the lock.  Unset the key from the $this->locks array even if
       // not set, PHP 5+ allows this without error or warning.
       unset($this->locks[$name]);
     }
 
-    return isset($locks[$name]);
+    return isset($this->locks[$name]);
   }
 
   /**
@@ -79,7 +79,7 @@ class WincacheLockBackend extends LockBackendAbstract {
    */
   public function release($name) {
     $result = $this->cache->get($name);
-    if (isset($locks[$name]) && $result !== FALSE && $result->data == $this->locks[$name]) {
+    if (isset($this->locks[$name]) && $result !== FALSE && $result->data == $this->locks[$name]) {
       $this->cache->clear($name);
     }
     // We unset unconditionally since caller assumes lock is released anyway.
