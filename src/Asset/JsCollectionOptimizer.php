@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\wincachedrupal\Asset\JsCollectionOptimizer.
- */
-
 namespace Drupal\wincachedrupal\Asset;
 
 use Drupal\Core\Asset\AssetDumperInterface;
@@ -14,11 +9,12 @@ use Drupal\Core\State\StateInterface;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\wincachedrupal\NetPhp;
+use Drupal\Core\Asset\JsCollectionOptimizer as CoreJsCollectionOptimizer;
 
 /**
  * Optimizes JavaScript assets.
  */
-class JsCollectionOptimizer extends \Drupal\Core\Asset\JsCollectionOptimizer {
+class JsCollectionOptimizer extends CoreJsCollectionOptimizer {
 
   /**
    * Code settings instance for reuse.

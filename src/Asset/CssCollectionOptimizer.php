@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\wincachedrupal\Asset\CssCollectionOptimizer.
- */
-
 namespace Drupal\wincachedrupal\Asset;
 
 use Drupal\Core\Asset\AssetDumperInterface;
@@ -14,11 +9,12 @@ use Drupal\Core\State\StateInterface;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\wincachedrupal\NetPhp;
+use Drupal\Core\Asset\CssCollectionOptimizer as CoreCssCollectionOptimizer;
 
 /**
  * Optimizes CSS assets.
  */
-class CssCollectionOptimizer extends \Drupal\Core\Asset\CssCollectionOptimizer {
+class CssCollectionOptimizer extends CoreCssCollectionOptimizer {
 
   /**
    * Code settings instance for reuse.
