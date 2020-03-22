@@ -44,14 +44,15 @@ class CssOptimizer extends CoreOptimizer {
   protected $minifier;
 
   /**
-   * Returns an instance of CssOptimizer
+   * Returns an instance of CssOptimizer.
    *
-   * @param \Drupal\wincachedrupal\NetPhp  $netphp
+   * @param \Drupal\wincachedrupal\NetPhp $netphp
+   *   NetPhp instance.
    */
   public function __construct(\Drupal\wincachedrupal\NetPhp $netphp) {
     if ($this->minifier = $netphp->getMinifier()) {
-      $this->netphp = $netphp;
-      $runtime = $this->netphp->getRuntime();
+      $this->netPhp = $netphp;
+      $runtime = $this->netPhp->getRuntime();
       $this->codeSettings = $runtime->TypeFromName("Microsoft.Ajax.Utilities.CodeSettings")->Instantiate();
       $this->codeSettings->OutputMode = $runtime->TypeFromName("Microsoft.Ajax.Utilities.OutputMode")->Instantiate()->Enum('SingleLine');
       $this->codeSettings->QuoteObjectLiteralProperties = TRUE;

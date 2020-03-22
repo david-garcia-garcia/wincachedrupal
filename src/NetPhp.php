@@ -140,7 +140,7 @@ class NetPhp {
       return NULL;
     }
 
-    $path = drupal_realpath($this->ajaxMinPath());
+    $path = \Drupal::service('file_system')->realpath($this->ajaxMinPath());
 
     // The file must be in libraries/_bin/ajaxmin
     if ($path == FALSE) {

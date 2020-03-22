@@ -11,6 +11,7 @@ use Drupal\Core\Asset\AssetDumperInterface;
 use Drupal\Core\Asset\AssetOptimizerInterface;
 use Drupal\Core\Asset\AssetCollectionGrouperInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\wincachedrupal\NetPhp;
 
 /**
@@ -28,21 +29,22 @@ class JsCollectionOptimizer extends \Drupal\Core\Asset\JsCollectionOptimizer {
   /**
    * Constructs a JsCollectionOptimizer.
    *
-   * @param \Drupal\Core\Asset\AssetCollectionGrouperInterface
+   * @param \Drupal\Core\Asset\AssetCollectionGrouperInterface $grouper
    *   The grouper for JS assets.
-   * @param \Drupal\Core\Asset\AssetOptimizerInterface
+   * @param \Drupal\Core\Asset\AssetOptimizerInterface $optimizer
    *   The optimizer for a single JS asset.
-   * @param \Drupal\Core\Asset\AssetDumperInterface
+   * @param \Drupal\Core\Asset\AssetDumperInterface $dumper
    *   The dumper for optimized JS assets.
-   * @param \Drupal\Core\State\StateInterface
+   * @param \Drupal\Core\State\StateInterface $state
    *   The state key/value store.
+   * @param \Drupal\Core\File\FileSystemInterface $file_system
+   *   The file system service.
+   * @param \Drupal\wincachedrupal\NetPhp $netphp
+   *   NetPhp instance.
    */
-  public function __construct(AssetCollectionGrouperInterface $grouper, AssetOptimizerInterface $optimizer, AssetDumperInterface $dumper, StateInterface $state, NetPhp $netPhp) {
-    $this->grouper = $grouper;
-    $this->optimizer = $optimizer;
-    $this->dumper = $dumper;
-    $this->state = $state;
-    $this->netPhp = $netPhp;
+  public function __construct(AssetCollectionGrouperInterface $grouper, AssetOptimizerInterface $optimizer, AssetDumperInterface $dumper, StateInterface $state, FileSystemInterface $file_system, NetPhp $netphp) {
+    parent::__construct($grouper, $optimizer, $dumper, $state, $file_system);
+    $this->netPhp = $netphp;
   }
 
   /**
@@ -57,7 +59,7 @@ class JsCollectionOptimizer extends \Drupal\Core\Asset\JsCollectionOptimizer {
 
     $runtime = $this->netPhp->getRuntime();
     $runtime->RegisterNetFramework4();
-    $d = $runtime->TypeFromName("System.IO.DirectoryInfo")->Instantiate(drupal_realpath('public://js'));
+    $d = $runtime->TypeFromName("System.IO.DirectoryInfo")->Instantiate($this->fileSystem->realpath('public://js'));
     if (!$d->Exists()->Val()) {
       return;
     }

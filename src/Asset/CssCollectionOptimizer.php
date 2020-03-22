@@ -11,6 +11,7 @@ use Drupal\Core\Asset\AssetDumperInterface;
 use Drupal\Core\Asset\AssetOptimizerInterface;
 use Drupal\Core\Asset\AssetCollectionGrouperInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\wincachedrupal\NetPhp;
 
 /**
@@ -28,21 +29,22 @@ class CssCollectionOptimizer extends \Drupal\Core\Asset\CssCollectionOptimizer {
   /**
    * Constructs a CssCollectionOptimizer.
    *
-   * @param \Drupal\Core\Asset\AssetCollectionGrouperInterface
+   * @param \Drupal\Core\Asset\AssetCollectionGrouperInterface $grouper
    *   The grouper for CSS assets.
-   * @param \Drupal\Core\Asset\AssetOptimizerInterface
+   * @param \Drupal\Core\Asset\AssetOptimizerInterface $optimizer
    *   The optimizer for a single CSS asset.
-   * @param \Drupal\Core\Asset\AssetDumperInterface
+   * @param \Drupal\Core\Asset\AssetDumperInterface $dumper
    *   The dumper for optimized CSS assets.
-   * @param \Drupal\Core\State\StateInterface
+   * @param \Drupal\Core\State\StateInterface $state
    *   The state key/value store.
+   * @param \Drupal\Core\File\FileSystemInterface $file_system
+   *   The file system service.
+   * @param \Drupal\wincachedrupal\NetPhp $netphp
+   *   NetPhp instance.
    */
-  public function __construct(AssetCollectionGrouperInterface $grouper, AssetOptimizerInterface $optimizer, AssetDumperInterface $dumper, StateInterface $state, NetPhp $netPhp) {
-    $this->grouper = $grouper;
-    $this->optimizer = $optimizer;
-    $this->dumper = $dumper;
-    $this->state = $state;
-    $this->netPhp = $netPhp;
+  public function __construct(AssetCollectionGrouperInterface $grouper, AssetOptimizerInterface $optimizer, AssetDumperInterface $dumper, StateInterface $state, FileSystemInterface $file_system, NetPhp $netphp) {
+    parent::__construct($grouper, $optimizer, $dumper, $state, $file_system);
+    $this->netPhp = $netphp;
   }
 
   /**
@@ -57,7 +59,7 @@ class CssCollectionOptimizer extends \Drupal\Core\Asset\CssCollectionOptimizer {
 
     $runtime = $this->netPhp->getRuntime();
     $runtime->RegisterNetFramework4();
-    $d = $runtime->TypeFromName("System.IO.DirectoryInfo")->Instantiate(drupal_realpath('public://css'));
+    $d = $runtime->TypeFromName("System.IO.DirectoryInfo")->Instantiate($this->fileSystem->realpath('public://css'));
     if (!$d->Exists()->Val()) {
       return;
     }
