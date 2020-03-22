@@ -27,6 +27,13 @@ class NetPhp {
   protected $minifier = FALSE;
 
   /**
+   * Is AjaxMin Supported.
+   *
+   * @var string|bool
+   */
+  protected $ajaxminSupport = FALSE;
+
+  /**
    * Load status.
    *
    * @var array
@@ -100,8 +107,6 @@ class NetPhp {
 
   #region Minifier
 
-  protected $ajaxmin_support = FALSE;
-
   /**
    * Returns TRUE if there is support,
    * or the error string if not.
@@ -110,7 +115,7 @@ class NetPhp {
    */
   public function hasAjaxMinSupport() {
     $this->getMinifier();
-    return $this->ajaxmin_support;
+    return $this->ajaxminSupport;
   }
 
   /**
@@ -136,7 +141,7 @@ class NetPhp {
     $this->minifier = NULL;
 
     if (!($this->hasComSupport() === TRUE && $this->hasNetPhpSupport() === TRUE)) {
-      $this->ajaxmin_support = 'NetPhp runtime missing.';
+      $this->ajaxminSupport = 'NetPhp runtime missing.';
       return NULL;
     }
 
@@ -144,7 +149,7 @@ class NetPhp {
 
     // The file must be in libraries/_bin/ajaxmin
     if ($path == FALSE) {
-      $this->ajaxmin_support = "File not found: {$this->ajaxMinPath()}";
+      $this->ajaxminSupport = "File not found: {$this->ajaxMinPath()}";
       return NULL;
     }
 
@@ -153,11 +158,11 @@ class NetPhp {
       $this->minifier = $this->runtime->TypeFromName("Microsoft.Ajax.Utilities.Minifier")->Instantiate();
     }
     catch (\Exception $e) {
-      $this->ajaxmin_support = $e->getMessage();
+      $this->ajaxminSupport = $e->getMessage();
       return NULL;
     }
 
-    $this->ajaxmin_support = TRUE;
+    $this->ajaxminSupport = TRUE;
     return $this->minifier;
   }
 
