@@ -66,6 +66,7 @@ class Installer {
       $formatter =  \Drupal::service('date.formatter');
 
       $ucache_meminfo = wincache_ucache_meminfo();
+      $cache = wincache_ucache_info();
 
       $requirements['wincache_ucache'] = array(
         'title' => $this->t('WinCache user cache'),
