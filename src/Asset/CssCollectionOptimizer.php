@@ -11,6 +11,7 @@ use Drupal\Core\Asset\AssetDumperInterface;
 use Drupal\Core\Asset\AssetOptimizerInterface;
 use Drupal\Core\Asset\AssetCollectionGrouperInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\wincachedrupal\NetPhp;
 
@@ -27,6 +28,13 @@ class CssCollectionOptimizer extends \Drupal\Core\Asset\CssCollectionOptimizer {
   protected $netPhp;
 
   /**
+   * The time service.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected $time;
+
+  /**
    * Constructs a CssCollectionOptimizer.
    *
    * @param \Drupal\Core\Asset\AssetCollectionGrouperInterface $grouper
@@ -41,10 +49,13 @@ class CssCollectionOptimizer extends \Drupal\Core\Asset\CssCollectionOptimizer {
    *   The file system service.
    * @param \Drupal\wincachedrupal\NetPhp $netphp
    *   NetPhp instance.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The time service.
    */
-  public function __construct(AssetCollectionGrouperInterface $grouper, AssetOptimizerInterface $optimizer, AssetDumperInterface $dumper, StateInterface $state, FileSystemInterface $file_system, NetPhp $netphp) {
+  public function __construct(AssetCollectionGrouperInterface $grouper, AssetOptimizerInterface $optimizer, AssetDumperInterface $dumper, StateInterface $state, FileSystemInterface $file_system, NetPhp $netphp, TimeInterface $time) {
     parent::__construct($grouper, $optimizer, $dumper, $state, $file_system);
     $this->netPhp = $netphp;
+    $this->time = $time;
   }
 
   /**
@@ -69,7 +80,7 @@ class CssCollectionOptimizer extends \Drupal\Core\Asset\CssCollectionOptimizer {
     $files = $d->GetFiles("*.*", $search_option);
     foreach ($files->AsIterator() as $file) {
       $uri = $file->FullName->Val();
-      if (REQUEST_TIME - filemtime($uri) > $threshold) {
+      if ($this->time->getRequestTime() - filemtime($uri) > $threshold) {
         $file->Delete();
       }
     }
