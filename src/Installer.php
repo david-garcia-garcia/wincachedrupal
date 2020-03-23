@@ -53,7 +53,6 @@ class Installer {
     // The first step is to enable COM, then make the NetPhp binary available.
     if ($comenabled) {
 
-      /** @var \Drupal\wincachedrupal\NetPhp */
       $netphp = \Drupal::service('netphp');
 
       $netphp_support = $netphp->hasNetPhpSupport();
