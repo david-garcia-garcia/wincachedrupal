@@ -80,7 +80,6 @@ class Installer {
 
     if ($wincache_ucache_enabled) {
 
-      /** @var \Drupal\Core\Datetime\DateFormatterInterface */
       $formatter = \Drupal::service('date.formatter');
 
       $ucache_meminfo = wincache_ucache_meminfo();
@@ -104,15 +103,16 @@ class Installer {
       );
     }
 
-    // Check for opcache size configuration.
     if ($phase == 'runtime') {
 
       $options = ini_get_all('wincache', TRUE);
-      // 1.3.7.2 What's new:
-      // If you disable the WinCache opcache in the php.ini
-      // (wincache.ocenabled=0), you should no longer see a shared memory
-      // mapping for the opcache. Also, you won't be able to turn it on in
-      // either a .user.ini or in a php script.
+      /*
+       * 1.3.7.2 What's new:
+       * If you disable the WinCache opcache in the php.ini
+       * (wincache.ocenabled=0), you should no longer see a shared memory
+       * mapping for the opcache. Also, you won't be able to turn it on in
+       * either a .user.ini or in a php script.
+       */
       if (version_compare($wincache_version, '1.3.7.2', '<')) {
         if ($options['wincache.ocenabled']['local_value'] == 0) {
           $ocachesize = $options['wincache.ocachesize']['local_value'];
@@ -124,17 +124,19 @@ class Installer {
           ];
         }
       }
-
-      // Zend OPCACHE is UNSTABLE on Windows and.... no one cares.
-      // Is this a windows server?
-      // Probably yes, because this is the WincacheDriver!
+      /*
+       * Zend OPCACHE is UNSTABLE on Windows and.... no one cares.
+       * Is this a windows server?
+       * Probably yes, because this is the WincacheDriver!
+       */
       $is_windows = strncasecmp(PHP_OS, 'WIN', 3) == 0;
       if ($is_windows) {
         if (version_compare(PHP_VERSION, '7.0.0') < 0) {
-          // Make sure that in versions prior to PHP 7 wincache
-          // is in charge of Opcode Caching.
+          /*
+           * Make sure that in versions prior to PHP 7 wincache
+           * is in charge of Opcode Caching.
+           */
           if (function_exists('wincache_ocache_meminfo')) {
-            // Make sure that we are using Wincache OPCODE cache.
             $opcode_ok = $options['wincache.ocenabled']['local_value'] == 1;
             $requirements['wincache_oc'] = [
               'title' => $this->t('Wincache Opcode cache'),
@@ -143,21 +145,22 @@ class Installer {
             ];
           }
         }
-
-        // Why is there a wincache.apppoolid setting?
-        // A: For debugging purposes only.  It should never be explicitly set
-        // in production environments.
-        // Q: Has WinCache been tested with custom application pool identities?
-        // e.g. NetworkService, LocalSystem, LocalService, or "Custom account"
-        // in the App Pool | Advanced Settings | Application Pool Identity
-        // dialog of inetmgr.exe
-        // A: No, it has not.  It's very possible that it won't work for
-        // anything other than ApplicationPoolIdentity.
-        // Q: What happens when wincache.apppoolid is not set?
-        // A: When IIS launches php-cgi.exe, it adds an environment variable
-        // (APP_POOL_ID), and that's what wincache will use if the apppoolid
-        // setting is not set.  The variable will contain the account name under
-        // the IIS APPPOOL domain to use for the app pool.
+        /*
+         * Why is there a wincache.apppoolid setting?
+         * A: For debugging purposes only.  It should never be explicitly set
+         * in production environments.
+         * Q: Has WinCache been tested with custom application pool identities?
+         * e.g. NetworkService, LocalSystem, LocalService, or "Custom account"
+         * in the App Pool | Advanced Settings | Application Pool Identity
+         * dialog of inetmgr.exe
+         * A: No, it has not.  It's very possible that it won't work for
+         * anything other than ApplicationPoolIdentity.
+         * Q: What happens when wincache.apppoolid is not set?
+         * A: When IIS launches php-cgi.exe, it adds an environment variable
+         * (APP_POOL_ID), and that's what wincache will use if the apppoolid
+         * setting is not set.  The variable will contain the account name under
+         * the IIS APPPOOL domain to use for the app pool.
+         */
         $apppool_ok = empty($options['wincache.apppoolid']['local_value']);
         if (!$apppool_ok) {
           $requirements['wincache_apppoolid'] = [

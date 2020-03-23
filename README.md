@@ -81,7 +81,8 @@ new \Symfony\Component\ClassLoader\WincacheClassLoader($prefix, $class_loader);
 
 $settings['file_cache']['default'] = [
     'class' => '\Drupal\Component\FileCache\FileCache',
-    'cache_backend_class' => \Drupal\wincachedrupal\Cache\WincacheFileCacheBackend::class,
+    'cache_backend_class' =>
+    \Drupal\wincachedrupal\Cache\WincacheFileCacheBackend::class,
     'cache_backend_configuration' => [],
   ];
 ```

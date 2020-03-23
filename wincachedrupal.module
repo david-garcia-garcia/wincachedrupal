@@ -14,8 +14,7 @@ function wincachedrupal_cron() {
   if (time() - $lastrun < (3600 * 24)) {
     return;
   }
-  // The NetPhp runtime has an internal cron for cleanup tasks...
-  /** @var \Drupal\wincachedrupal\NetPhp */
+
   $netphp = \Drupal::service('netphp');
   if ($netphp->hasNetPhpSupport() === TRUE) {
     try {

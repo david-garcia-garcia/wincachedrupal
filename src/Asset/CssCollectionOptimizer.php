@@ -72,7 +72,7 @@ class CssCollectionOptimizer extends CoreCssCollectionOptimizer {
     }
     $search_option = $runtime->TypeFromName("System.IO.SearchOption")->Enum("AllDirectories");
     $threshold = \Drupal::config('system.performance')->get('stale_file_threshold');
-    /** @var \NetPhp\Core\NetProxy */
+
     $files = $d->GetFiles("*.*", $search_option);
     foreach ($files->AsIterator() as $file) {
       $uri = $file->FullName->Val();
