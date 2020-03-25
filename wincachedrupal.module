@@ -5,6 +5,8 @@
  * WinCacheDrupal module functions.
  */
 
+module_load_include('inc', 'wincachedrupal', 'wincache');
+
 /**
  * Implements hook_cron().
  */

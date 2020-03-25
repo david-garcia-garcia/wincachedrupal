@@ -39,7 +39,7 @@ class WincacheBackend extends WincacheBackendGeneric implements CacheBackendInte
    */
   public function get($cid, $allow_invalid = FALSE) {
     $success = FALSE;
-    $cache = wincache_ucache_get($this->getBinKey($cid), $success);
+    $cache = wincachedrupal_ucache_get($this->getBinKey($cid), $success);
     if ($success == FALSE) {
       return FALSE;
     }
@@ -57,7 +57,7 @@ class WincacheBackend extends WincacheBackendGeneric implements CacheBackendInte
     }
 
     $success = FALSE;
-    $result = wincache_ucache_get(array_keys($map), $success);
+    $result = wincachedrupal_ucache_get(array_keys($map), $success);
     $cache = [];
     if ($success == TRUE) {
       foreach ($result as $key => $item) {
@@ -207,14 +207,14 @@ class WincacheBackend extends WincacheBackendGeneric implements CacheBackendInte
    * {@inheritdoc}
    */
   public function delete($cid) {
-    wincache_ucache_delete($this->getBinKey($cid));
+    wincachedrupal_ucache_delete($this->getBinKey($cid));
   }
 
   /**
    * {@inheritdoc}
    */
   public function deleteMultiple(array $cids) {
-    wincache_ucache_delete(array_map([$this, 'getBinKey'], $cids));
+    wincachedrupal_ucache_delete(array_map([$this, 'getBinKey'], $cids));
   }
 
   /**

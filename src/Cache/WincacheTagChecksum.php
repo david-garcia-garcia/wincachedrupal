@@ -5,6 +5,13 @@ namespace Drupal\wincachedrupal\Cache;
 use Drupal\Core\Cache\CacheTagsChecksumInterface;
 use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 
+if (function_exists('module_load_include')) {
+  module_load_include('inc', 'wincachedrupal', 'wincache');
+}
+else {
+  require_once __DIR__ . '/../../wincache.inc';
+}
+
 /**
  * Cache tags invalidations checksum implementation that uses wincache.
  *
@@ -44,10 +51,10 @@ class WincacheTagChecksum implements CacheTagsChecksumInterface, CacheTagsInvali
       if (isset($this->invalidatedTags[$tag])) {
         continue;
       }
-      $success = wincache_ucache_inc('cache_tag::' . $tag, 1, $success);
+      $success = wincachedrupal_ucache_inc('cache_tag::' . $tag, 1);
       // Increment does not work if the item does not exist already.
       if ($success === FALSE) {
-        wincache_ucache_set('cache_tag::' . $tag, 1);
+        wincachedrupal_ucache_set('cache_tag::' . $tag, 1);
       }
       $this->invalidatedTags[$tag] = TRUE;
       unset($this->tagCache[$tag]);
@@ -89,7 +96,7 @@ class WincacheTagChecksum implements CacheTagsChecksumInterface, CacheTagsInvali
 
     if ($missing_tags) {
       $keys = preg_filter('/^/', 'cache_tag::', $tags);
-      $stored_tags = wincache_ucache_get($keys);
+      $stored_tags = wincachedrupal_ucache_get($keys);
       $this->tagCache += $stored_tags;
       // Fill static cache with empty objects for tags not found in the
       // database.

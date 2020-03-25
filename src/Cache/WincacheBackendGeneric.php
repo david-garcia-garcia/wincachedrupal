@@ -3,8 +3,14 @@
 namespace Drupal\wincachedrupal\Cache;
 
 use Drupal\Core\Cache\CacheBackendInterface;
-
 use Drupal\supercache\Cache\RequestTimeTrait;
+
+if (function_exists('module_load_include')) {
+  module_load_include('inc', 'wincachedrupal', 'wincache');
+}
+else {
+  require_once __DIR__ . '/../../wincache.inc';
+}
 
 /**
  * Abstact class to be inherited.
@@ -48,7 +54,7 @@ abstract class WincacheBackendGeneric {
   protected $binPrefix;
 
   /**
-   * Wrapper for wincache_ucache_set to properly manage expirations.
+   * Wrapper for wincachedrupal_ucache_set to properly manage expirations.
    *
    * @param string $cid
    *   The cache id.
@@ -59,15 +65,15 @@ abstract class WincacheBackendGeneric {
    */
   protected function wincacheSet($cid, $data, $expire = CacheBackendInterface::CACHE_PERMANENT) {
     if ($ttl = $this->getTtl($expire)) {
-      return wincache_ucache_set($cid, $data, $ttl);
+      return wincachedrupal_ucache_set($cid, $data, $ttl);
     }
     else {
-      return wincache_ucache_set($cid, $data);
+      return wincachedrupal_ucache_set($cid, $data);
     }
   }
 
   /**
-   * Wrapper for wincache_ucache_add to properly manage expirations.
+   * Wrapper for wincachedrupal_ucache_add to properly manage expirations.
    *
    * @param string $cid
    *   The cache id.
@@ -82,10 +88,10 @@ abstract class WincacheBackendGeneric {
       /* Prevent Drupal from logging any exceptions or warning thrown here */
     }, E_ALL);
     if ($ttl = $this->getTtl($expire)) {
-      $result = @wincache_ucache_add($cid, $data, $ttl);
+      $result = wincachedrupal_ucache_add($cid, $data, $ttl);
     }
     else {
-      $result = @wincache_ucache_add($cid, $data);
+      $result = wincachedrupal_ucache_add($cid, $data);
     }
     restore_error_handler();
     return $result;
@@ -137,7 +143,7 @@ abstract class WincacheBackendGeneric {
     foreach ($prefixes as $prefix) {
       $parts[] = "^$prefix";
     }
-    $data = wincache_ucache_info();
+    $data = wincachedrupal_ucache_info();
     $k = array_column($data['ucache_entries'], 'key_name');
     $regex = '/' . implode('|', $parts) . '/';
     $keys = preg_grep($regex, $k);
@@ -196,9 +202,9 @@ abstract class WincacheBackendGeneric {
   protected function getBinName() {
     $key = $this->sitePrefix . ":" . self::INVALIDATIONCOUNT . ':' . $this->realBin;
     $success = FALSE;
-    $cache = wincache_ucache_get($key, $success);
+    $cache = wincachedrupal_ucache_get($key, $success);
     if ($success == FALSE) {
-      wincache_ucache_set($key, 0);
+      wincachedrupal_ucache_set($key, 0);
       $cache = 0;
     }
     return $this->realBin . $cache;
@@ -213,8 +219,8 @@ abstract class WincacheBackendGeneric {
     // This call MUST succeed because the value
     // is populated when calliing getBinName the
     // first time.
-    $inv = wincache_ucache_inc($invalidationcountkey, 1);
-    $invalidations = wincache_ucache_get($invalidationskey);
+    $inv = wincachedrupal_ucache_inc($invalidationcountkey, 1);
+    $invalidations = wincachedrupal_ucache_get($invalidationskey);
     if (empty($invalidations)) {
       $invalidations = [];
       if ($inv > 1) {
@@ -225,7 +231,7 @@ abstract class WincacheBackendGeneric {
     // Store the current name so that it can
     // be clared on garbage colleciton.
     $invalidations[] = $this->binPrefix;
-    wincache_ucache_set($invalidationskey, $invalidations);
+    wincachedrupal_ucache_set($invalidationskey, $invalidations);
     // Update the bin name.
     $this->bin = $this->realBin . $inv;
     $this->generateBinPrefix();
@@ -240,12 +246,12 @@ abstract class WincacheBackendGeneric {
     // at once because the heavy part is the call to wincache_ucache_get
     // which can be very memory intensive.
     $invalidationskey = $this->sitePrefix . ":" . self::INVALIDATIONS;
-    $invalidations = wincache_ucache_get($invalidationskey, $success);
+    $invalidations = wincachedrupal_ucache_get($invalidationskey);
     if (!empty($invalidations)) {
       // Invalidations contains an array of prefixes
       // used for this binary.
-      wincache_ucache_delete($this->getAllKeysWithPrefix($invalidations, FALSE));
-      wincache_ucache_set($invalidationskey, []);
+      wincachedrupal_ucache_delete($this->getAllKeysWithPrefix($invalidations, FALSE));
+      wincachedrupal_ucache_set($invalidationskey, []);
     }
   }
 

@@ -4,6 +4,13 @@ namespace Drupal\wincachedrupal\Cache;
 
 use Drupal\supercache\Cache\CacheRawBackendInterface;
 
+if (function_exists('module_load_include')) {
+  module_load_include('inc', 'wincachedrupal', 'wincache');
+}
+else {
+  require_once __DIR__ . '/../../wincache.inc';
+}
+
 /**
  * Stores cache items in Wincache.
  */
@@ -26,7 +33,7 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
    */
   public function get($cid) {
     $success = FALSE;
-    $data = wincache_ucache_get($this->getBinKey($cid), $success);
+    $data = wincachedrupal_ucache_get($this->getBinKey($cid), $success);
     if (!$success) {
       return FALSE;
     }
@@ -43,7 +50,7 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
       $map[$this->getBinKey($cid)] = $cid;
     }
 
-    $result = wincache_ucache_get(array_keys($map));
+    $result = wincachedrupal_ucache_get(array_keys($map));
     $cache = [];
     if ($result) {
       foreach ($result as $key => $item) {
@@ -130,14 +137,14 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
    * {@inheritdoc}
    */
   public function delete($cid) {
-    wincache_ucache_delete($this->getBinKey($cid));
+    wincachedrupal_ucache_delete($this->getBinKey($cid));
   }
 
   /**
    * {@inheritdoc}
    */
   public function deleteMultiple(array $cids) {
-    wincache_ucache_delete(array_map([$this, 'getBinKey'], $cids));
+    wincachedrupal_ucache_delete(array_map([$this, 'getBinKey'], $cids));
   }
 
   /**
@@ -167,7 +174,7 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
   public function counter($cid, $increment, $default = 0) {
     $success = FALSE;
     $key = $this->getBinKey($cid);
-    @wincache_ucache_inc($key, $increment, $success);
+    wincachedrupal_ucache_inc($key, $increment, $success);
     if (!$success) {
       $this->wincacheSet($key, $default);
     }

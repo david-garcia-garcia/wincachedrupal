@@ -14,7 +14,7 @@ trait BackendGeneralTestCaseTrait {
    * {@inheritdoc}
    */
   public function setUp() {
-    wincache_ucache_clear();
+    wincachedrupal_ucache_clear();
     $app_root = '/';
     $site_path = uniqid();
     $factory = new WincacheBackendFactory($app_root, $site_path, new DummyTagChecksum());

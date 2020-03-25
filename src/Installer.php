@@ -6,6 +6,13 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
 
+if (function_exists('module_load_include')) {
+  module_load_include('inc', 'wincachedrupal', 'wincache');
+}
+else {
+  require_once __DIR__ . '/../wincache.inc';
+}
+
 /**
  * Install requirements class.
  */
@@ -20,23 +27,23 @@ class Installer {
     $requirements = [];
 
     // Test WinCache.
-    $wincache_ucache_enabled = (function_exists('wincache_ucache_info') && ($cache = @wincache_ucache_info(TRUE)));
+    $wincache_enabled = wincachedrupal_enabled();
 
     $wincache_version = phpversion('wincache');
     $wincache_description = NULL;
-    if ($wincache_ucache_enabled) {
+    if ($wincache_enabled) {
       $url = Url::fromUri('http://php.net/manual/en/book.wincache.php');
       $link = Link::fromTextAndUrl($this->t('Official WinCache Extension Documentation'), $url);
 
       $wincache_description = $this->t(
         'The wincachedrupal module needs the wincache extension see: @link.',
-        ['@link' => $link],
+        ['@link' => $link]
       );
     }
     $requirements['wincache'] = [
       'title' => $this->t('WinCache version'),
-      'value' => $wincache_ucache_enabled ? $wincache_version : $this->t('Not available'),
-      'severity' => $wincache_ucache_enabled ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+      'value' => $wincache_enabled ? $wincache_version : $this->t('Not available'),
+      'severity' => $wincache_enabled ? REQUIREMENT_OK : REQUIREMENT_ERROR,
       'description' => $wincache_description,
     ];
 
@@ -77,12 +84,12 @@ class Installer {
       ];
     }
 
-    if ($wincache_ucache_enabled) {
+    if ($wincache_enabled) {
 
       $formatter = \Drupal::service('date.formatter');
 
-      $ucache_meminfo = wincache_ucache_meminfo();
-      $cache = wincache_ucache_info();
+      $ucache_meminfo = wincachedrupal_ucache_meminfo();
+      $cache = wincachedrupal_ucache_info();
 
       $requirements['wincache_ucache'] = [
         'title' => $this->t('WinCache user cache'),
@@ -102,7 +109,7 @@ class Installer {
       );
     }
 
-    if ($phase == 'runtime') {
+    if ($phase == 'runtime' && $wincache_enabled) {
 
       $options = ini_get_all('wincache', TRUE);
       /*

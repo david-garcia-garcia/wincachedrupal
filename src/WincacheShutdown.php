@@ -2,6 +2,13 @@
 
 namespace Drupal\wincachedrupal;
 
+if (function_exists('module_load_include')) {
+  module_load_include('inc', 'wincachedrupal', 'wincache');
+}
+else {
+  require_once __DIR__ . '/../wincache.inc';
+}
+
 /**
  * WincacheShutdown class.
  */
@@ -37,9 +44,9 @@ class WincacheShutdown {
     if (!$user_cache_available) {
       return;
     }
-    $ucache_mem_info = wincache_ucache_meminfo();
+    $ucache_mem_info = wincachedrupal_ucache_meminfo();
     // Under some situations WincacheDrupal will fail to report
-    // any data through wincache_ucache_meminfo().
+    // any data through wincachedrupal_ucache_meminfo().
     if (!empty($ucache_mem_info) && $ucache_mem_info['memory_total'] > 0) {
       $ucache_available_memory = $ucache_mem_info['memory_total'] - $ucache_mem_info['memory_overhead'];
       $free_memory_ratio = $ucache_mem_info['memory_free'] / $ucache_available_memory;
@@ -51,7 +58,7 @@ class WincacheShutdown {
         $params["@total"] = round($ucache_mem_info['memory_total'] / 1024, 0);
         $params["@avail"] = round($ucache_available_memory / 1024, 0);
         $this->logger->notice('Usercache threshold limit reached. @free Kb free out of @avail Kb available from a total of @total Kb. Cache cleared.', $params);
-        wincache_ucache_clear();
+        wincachedrupal_ucache_clear();
       }
     }
 
@@ -64,12 +71,12 @@ class WincacheShutdown {
    */
   private function wincachedrupalCheckScache() {
     $threshold = 0.1;
-    if (!function_exists('wincache_scache_meminfo')) {
+    if (!wincachedrupal_enabled()) {
       return;
     }
     // Make sure that the session cache is not FULL! Otherwise people will not
     // be able to login anymore...
-    $scache_mem_info = wincache_scache_meminfo();
+    $scache_mem_info = wincachedrupal_scache_meminfo();
     if (!empty($scache_mem_info) && $scache_mem_info['memory_total'] > 0) {
       $scache_available_memory = $scache_mem_info['memory_total'] - $scache_mem_info['memory_overhead'];
       $free_memory_ratio = $scache_mem_info['memory_free'] / $scache_available_memory;
@@ -77,7 +84,7 @@ class WincacheShutdown {
         // There is no way of clearing sessions...
         // but this one!
         $current_id = session_id();
-        $scache_info = wincache_scache_info();
+        $scache_info = wincachedrupal_scache_info();
         // Destroy all session.
         foreach ($scache_info['scache_entries'] as $entry) {
           // Do not delete own session.

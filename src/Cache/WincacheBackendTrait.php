@@ -4,6 +4,13 @@ namespace Drupal\wincachedrupal\Cache;
 
 use Drupal\Core\Cache\CacheBackendInterface;
 
+if (function_exists('module_load_include')) {
+  module_load_include('inc', 'wincachedrupal', 'wincache');
+}
+else {
+  require_once __DIR__ . '/../../wincache.inc';
+}
+
 /**
  * WincacheBackendTrait.
  */
@@ -39,7 +46,7 @@ trait WincacheBackendTrait {
   }
 
   /**
-   * Wrapper for wincache_ucache_set to properly manage expirations.
+   * Wrapper for wincachedrupal_ucache_set to properly manage expirations.
    *
    * @param string $cid
    *   The cache id.
@@ -50,15 +57,15 @@ trait WincacheBackendTrait {
    */
   protected function wincacheSet($cid, $data, $expire = CacheBackendInterface::CACHE_PERMANENT) {
     if ($ttl = $this->getTtl($expire)) {
-      return wincache_ucache_set($cid, $data, $ttl);
+      return wincachedrupal_ucache_set($cid, $data, $ttl);
     }
     else {
-      return wincache_ucache_set($cid, $data);
+      return wincachedrupal_ucache_set($cid, $data);
     }
   }
 
   /**
-   * Wrapper for wincache_ucache_add to properly manage expirations.
+   * Wrapper for wincachedrupal_ucache_add to properly manage expirations.
    *
    * @param string $cid
    *   The cache id.
@@ -73,10 +80,10 @@ trait WincacheBackendTrait {
       /* Prevent Drupal from logging any exceptions or warning thrown here */
     }, E_ALL);
     if ($ttl = $this->getTtl($expire)) {
-      $result = @wincache_ucache_add($cid, $data, $ttl);
+      $result = wincachedrupal_ucache_add($cid, $data, $ttl);
     }
     else {
-      $result = @wincache_ucache_add($cid, $data);
+      $result = wincachedrupal_ucache_add($cid, $data);
     }
     restore_error_handler();
     return $result;
@@ -116,7 +123,7 @@ trait WincacheBackendTrait {
    *   The matching keys.
    */
   public function getAllKeysWithPrefix($prefix) {
-    $data = wincache_ucache_info();
+    $data = wincachedrupal_ucache_info();
     $k = array_column($data['ucache_entries'], 'key_name');
     $keys = preg_grep("/^$prefix/", $k);
     $keys = preg_replace("/^$prefix/", '', $keys);
