@@ -30,16 +30,15 @@ class Installer {
     $wincache_enabled = wincachedrupal_enabled();
 
     $wincache_version = phpversion('wincache');
-    $wincache_description = NULL;
-    if ($wincache_enabled) {
-      $url = Url::fromUri('http://php.net/manual/en/book.wincache.php');
-      $link = Link::fromTextAndUrl($this->t('Official WinCache Extension Documentation'), $url);
 
-      $wincache_description = $this->t(
-        'The wincachedrupal module needs the wincache extension see: @link.',
-        ['@link' => $link]
-      );
-    }
+    $link = Link::fromTextAndUrl('Official WinCache Extension Documentation',
+      Url::fromUri('http://php.net/manual/en/book.wincache.php'))->toString();
+
+    $wincache_description = $this->t(
+      'The wincachedrupal module needs the wincache extension<br/>see: @link.',
+      ['@link' => $link]
+    );
+
     $requirements['wincache'] = [
       'title' => $this->t('WinCache version'),
       'value' => $wincache_enabled ? $wincache_version : $this->t('Not available'),
