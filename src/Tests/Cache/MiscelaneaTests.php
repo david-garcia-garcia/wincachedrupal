@@ -7,7 +7,7 @@ use Drupal\KernelTests\KernelTestBase;
 /**
  * Testea funciones basicas.
  *
- * @group Cache
+ * @group wincachedrupal
  */
 class MiscelaneaTests extends KernelTestBase {
 

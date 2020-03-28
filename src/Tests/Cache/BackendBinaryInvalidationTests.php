@@ -10,7 +10,7 @@ use Drupal\supercache\Cache\DummyTagChecksum;
 /**
  * Testea funciones basicas.
  *
- * @group Cache
+ * @group wincachedrupal
  */
 class BackendBinaryInvalidationTests extends KernelTestBase {
 

@@ -6,6 +6,8 @@ use Drupal\wincachedrupal\Cache\WincacheRawBackendFactory;
 
 /**
  * Tests WincacheRawBackend trit.
+ *
+ * @group wincachedrupal
  */
 trait RawBackendGeneralTestCaseTrait {
 

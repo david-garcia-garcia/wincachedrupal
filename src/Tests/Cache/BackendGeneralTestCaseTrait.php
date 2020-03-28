@@ -7,6 +7,8 @@ use Drupal\supercache\Cache\DummyTagChecksum;
 
 /**
  * Tests WincacheBackendFactory.
+ *
+ * @group wincachedrupal
  */
 trait BackendGeneralTestCaseTrait {
 

@@ -9,7 +9,7 @@ use Drupal\wincachedrupal\Cache\WincacheRawBackendFactory;
 /**
  * Testea funciones basicas.
  *
- * @group Cache
+ * @group wincachedrupal
  */
 class RawBackendBinaryInvalidationTests extends KernelTestBase {
 
