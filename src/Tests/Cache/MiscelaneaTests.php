@@ -12,6 +12,14 @@ use Drupal\KernelTests\KernelTestBase;
 class MiscelaneaTests extends KernelTestBase {
 
   /**
+   * {@inheritdoc}
+   */
+  public static $modules = [
+    'supercache',
+    'wincachedrupal',
+  ];
+
+  /**
    * Implements serialization.
    */
   protected function doSerialize($use_json, $data) {

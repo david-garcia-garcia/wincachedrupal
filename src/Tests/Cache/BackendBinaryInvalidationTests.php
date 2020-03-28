@@ -15,6 +15,14 @@ use Drupal\supercache\Cache\DummyTagChecksum;
 class BackendBinaryInvalidationTests extends KernelTestBase {
 
   /**
+   * {@inheritdoc}
+   */
+  public static $modules = [
+    'supercache',
+    'wincachedrupal',
+  ];
+
+  /**
    * Make sure that invalidations and garbage collection works fine.
    */
   public function testInvalidations() {
