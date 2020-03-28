@@ -5,13 +5,6 @@ namespace Drupal\wincachedrupal\Cache;
 use Drupal\Core\Cache\CacheTagsChecksumInterface;
 use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 
-if (function_exists('module_load_include')) {
-  module_load_include('inc', 'wincachedrupal', 'wincache');
-}
-else {
-  require_once __DIR__ . '/../../wincache.inc';
-}
-
 /**
  * Cache tags invalidations checksum implementation that uses wincache.
  *

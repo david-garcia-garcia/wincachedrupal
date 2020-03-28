@@ -4,13 +4,6 @@ namespace Drupal\wincachedrupal\Cache;
 
 use Drupal\supercache\Cache\CacheRawBackendInterface;
 
-if (function_exists('module_load_include')) {
-  module_load_include('inc', 'wincachedrupal', 'wincache');
-}
-else {
-  require_once __DIR__ . '/../../wincache.inc';
-}
-
 /**
  * Stores cache items in Wincache.
  */
