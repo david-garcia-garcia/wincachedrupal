@@ -22,14 +22,16 @@ install:
        echo "Manufacturer: $($cpu.Manufacturer)";
        echo "Model: $($cpu.Model)";
   - ps: $Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL = "$env:APPVEYOR_REPO_COMMIT_MESSAGE $env:APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED".TrimEnd();
+  - ps: |
+      If ($Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL -imatch 'rdpinstall') {
+        $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+      }
   - ps: $Env:TestLogDir = "$Env:BuildDir\TestLogs";
   - ps: $Env:TestLogDirClone = "$Env:BuildDir\TestLogsClone";
   - cmd: mkdir %TestLogDir%
   - cmd: mkdir %TestLogDirClone%
   - ps: Start-Transcript -path "$Env:BuildDir\console.txt" -append
   - ps: $Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL = "$env:APPVEYOR_REPO_COMMIT_MESSAGE $env:APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED".TrimEnd();
-  - ps: Start-Service 'MSSQL$SQL2017' | out-null
-  - ps: Set-Service 'SQLAgent$SQL2017' -StartupType Manual | out-null
   - ps: Start-Service W3SVC | out-null
   - ps: choco install php -y --no-progress 2>&1 > "$Env:TestLogDir\choco_install_php.txt"
   - ps: choco install urlrewrite -y --no-progress 2>&1 > "$Env:TestLogDir\choco_install_urlrewrite.txt"
@@ -76,7 +78,7 @@ install:
       }
   - cmd: composer global require hirak/prestissimo
   - cmd: cd /d c:\projects
-  - cmd: IF NOT EXIST C:\projects\drupal-project composer create-project -n drupal-composer/drupal-project:8.x-dev
+  - cmd: IF NOT EXIST C:\projects\drupal-project composer create-project -n drupal/recommended-project:8.9.2
   - cmd: cd /d C:\projects\drupal-project
   - cmd: composer config repositories.drupal composer https://packages.drupal.org/8
   - cmd: composer require drupal/wincachedrupal
