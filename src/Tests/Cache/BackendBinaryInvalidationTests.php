@@ -18,7 +18,7 @@ class BackendBinaryInvalidationTests extends KernelTestBase
    * {@inheritdoc}
    */
   public static $modules = [
-    'wincachedrupal',
+    'wincachedrupal'
   ];
 
   /**
@@ -52,6 +52,7 @@ class BackendBinaryInvalidationTests extends KernelTestBase
     $backend->deleteAll();
     $backend->setMultiple($data1);
 
+    // Wincache won't return detailed of stored keys: reported here: https://forums.iis.net/p/1249312/2161546.aspx?p=True&t=637307565571675358
     $this->assertEquals(count($data1), count($backend->getAll()));
     $firstPrefix = $backend->getBinKey('');
     $this->assertEquals(count($data1), count($backend->getAllKeysWithPrefix($firstPrefix)), 'Correct number of items returned.');

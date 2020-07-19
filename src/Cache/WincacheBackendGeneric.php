@@ -3,12 +3,15 @@
 namespace Drupal\wincachedrupal\Cache;
 
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\supercache\Cache\RequestTimeTrait;
 
 /**
  * Abstact class to be inherited.
  */
 abstract class WincacheBackendGeneric
 {
+
+  use RequestTimeTrait;
 
   const INVALIDATIONCOUNT = '@@wincache_invalidation_count';
   const INVALIDATIONS = '@@wincache_invalidations';
@@ -176,6 +179,7 @@ abstract class WincacheBackendGeneric
     // track of an invalidation count.
     $this->sitePrefix = $this->shortMd5($site_prefix);
     $this->realBin = $bin;
+    $this->refreshRequestTime();
     $this->bin = $this->getBinName();
     $this->generateBinPrefix();
   }

@@ -6,6 +6,7 @@
     "require": {
         "drupalonwindows/netphp": "2.x-dev",
         "drupal/core": "^8.8",
+        "drupal/supercache": "8.x-dev",
         "php": "^7.1"
     },
     "autoload": {

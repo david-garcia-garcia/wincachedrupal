@@ -3,16 +3,12 @@
 namespace Drupal\wincachedrupal\Cache;
 
 use Drupal\supercache\Cache\CacheRawBackendInterface;
-use Drupal\supercache\Cache\RequestTimeTrait;
 
 /**
  * Stores cache items in Wincache.
  */
 class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBackendInterface
 {
-
-  use RequestTimeTrait;
-
   /**
    * Constructs a new WincacheRawBackend instance.
    *
@@ -24,7 +20,6 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
   public function __construct($bin, $site_prefix)
   {
     parent::__construct('rawcache_' . $bin, $site_prefix);
-    $this->refreshRequestTime();
   }
 
   /**
