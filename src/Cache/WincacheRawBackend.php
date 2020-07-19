@@ -26,7 +26,7 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
    */
   public function get($cid) {
     $success = FALSE;
-    $data = wincachedrupal_ucache_get($this->getBinKey($cid), $success);
+    $data = \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_get($this->getBinKey($cid), $success);
     if (!$success) {
       return FALSE;
     }
@@ -43,7 +43,7 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
       $map[$this->getBinKey($cid)] = $cid;
     }
 
-    $result = wincachedrupal_ucache_get(array_keys($map));
+    $result = \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_get(array_keys($map));
     $cache = [];
     if ($result) {
       foreach ($result as $key => $item) {
@@ -130,14 +130,14 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
    * {@inheritdoc}
    */
   public function delete($cid) {
-    wincachedrupal_ucache_delete($this->getBinKey($cid));
+      \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_delete($this->getBinKey($cid));
   }
 
   /**
    * {@inheritdoc}
    */
   public function deleteMultiple(array $cids) {
-    wincachedrupal_ucache_delete(array_map([$this, 'getBinKey'], $cids));
+      \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_delete(array_map([$this, 'getBinKey'], $cids));
   }
 
   /**
@@ -167,7 +167,7 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
   public function counter($cid, $increment, $default = 0) {
     $success = FALSE;
     $key = $this->getBinKey($cid);
-    wincachedrupal_ucache_inc($key, $increment, $success);
+      \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_inc($key, $increment, $success);
     if (!$success) {
       $this->wincacheSet($key, $default);
     }

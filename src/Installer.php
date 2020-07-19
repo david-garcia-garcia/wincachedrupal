@@ -6,13 +6,6 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
 
-if (function_exists('module_load_include')) {
-  module_load_include('inc', 'wincachedrupal', 'wincache');
-}
-else {
-  require_once __DIR__ . '/../wincache.inc';
-}
-
 /**
  * Install requirements class.
  */
@@ -27,7 +20,7 @@ class Installer {
     $requirements = [];
 
     // Test WinCache.
-    $wincache_enabled = wincachedrupal_enabled();
+    $wincache_enabled = \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_enabled();
 
     $wincache_version = phpversion('wincache');
 
@@ -87,8 +80,8 @@ class Installer {
 
       $formatter = \Drupal::service('date.formatter');
 
-      $ucache_meminfo = wincachedrupal_ucache_meminfo();
-      $cache = wincachedrupal_ucache_info();
+      $ucache_meminfo = \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_meminfo();
+      $cache = \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_info();
 
       $requirements['wincache_ucache'] = [
         'title' => $this->t('WinCache user cache'),

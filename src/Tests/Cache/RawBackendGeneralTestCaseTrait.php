@@ -15,7 +15,7 @@ trait RawBackendGeneralTestCaseTrait {
    * {@inheritdoc}
    */
   public function setUp() {
-    wincachedrupal_ucache_clear();
+    \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_clear();
     $app_root = '/';
     $site_path = uniqid();
     $factory = new WincacheRawBackendFactory($app_root, $site_path);

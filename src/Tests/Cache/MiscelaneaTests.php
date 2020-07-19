@@ -57,8 +57,8 @@ class MiscelaneaTests extends KernelTestBase {
     $cid = 'cacheid';
 
     if ($enable_wincache) {
-      wincachedrupal_ucache_set($cid, $data);
-      $data = wincachedrupal_ucache_get($cid);
+      \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_set($cid, $data);
+      $data = \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_get($cid);
     }
 
     $definition = $data['core/core.services.yml'];
@@ -113,9 +113,9 @@ class MiscelaneaTests extends KernelTestBase {
       '6th' => $bar2,
     ];
 
-    $this->assertTrue(wincachedrupal_ucache_add('master', $master));
-    $this->assertTrue(wincachedrupal_ucache_exists('master'));
-    $this->assertEquals(count(wincachedrupal_ucache_get('master')), count($master));
+    $this->assertTrue(\Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_add('master', $master));
+    $this->assertTrue(\Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_exists('master'));
+    $this->assertEquals(count(\Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_get('master')), count($master));
   }
 
 }
