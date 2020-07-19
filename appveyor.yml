@@ -90,7 +90,7 @@ install:
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\phpbin %cd%\phpbin
   # Write to default.settings.php the low level wincache integration
   - ps: |
-     $value = @"
+     $value = @'
      if ($settings['hash_salt']) {
        $prefix = 'drupal.' . hash('sha256', 'drupal.' . $settings['hash_salt']);
        $loader = new \Symfony\Component\ClassLoader\WincacheClassLoader($prefix, $class_loader);
@@ -104,7 +104,7 @@ install:
          'cache_backend_class' => \Drupal\wincachedrupal\Cache\WincacheFileCacheBackend::class,
          'cache_backend_configuration' => [],
        ];
-     "@
+     '@
      Add-Content -Path "C:\projects\drupal-project\web\sites\default\default.settings.php" -Value $value
   # Prepare the drupal command
   - ps: |
