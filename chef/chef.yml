@@ -22,7 +22,6 @@ deployers:
       - {type: 'dl', uri: 'https://windows.php.net/downloads/pecl/releases/xdebug/2.9.6/php_xdebug-2.9.6-7.4-nts-vc15-x64.zip', maps: {'php_xdebug.dll':'php/ext/php_xdebug.dll'}}
       - {type: 'dl', uri: 'https://windows.php.net/downloads/pecl/releases/igbinary/3.1.2/php_igbinary-3.1.2-7.4-nts-vc15-x64.zip', maps: {'php_igbinary.dll': 'php/ext/php_igbinary.dll'}}
       - {type: 'dl', uri: 'https://windows.php.net/downloads/pecl/releases/couchbase/2.6.2/php_couchbase-2.6.2-7.4-nts-vc15-x64.zip', maps: {'php_couchbase.dll':'php/ext/php_couchbase.dll', 'libcouchbase.dll':'php/libcouchbase.dll'}}
-      - {type: 'dl', uri: 'https://windows.php.net/downloads/pecl/releases/pdo_sqlsrv/5.8.1/php_pdo_sqlsrv-5.8.1-7.4-nts-vc15-x64.zip', maps: {'php_pdo_sqlsrv.dll': 'php/ext/php_pdo_sqlsrv.dll'}}
       - {type: 'dl', uri: 'file://phpbin/php_wincache.zip', maps: {'php_wincache.dll': 'php/ext/php_wincache.dll'}}
       - {type: 'dl', uri: 'file://phpbin/php_blackfire.zip', maps: {'php_blackfire.dll': 'php/ext/php_blackfire.dll'}}
  # CERTIFICATES
@@ -46,16 +45,14 @@ deployers:
       - {type: 'ini', multivalue: true, 'key':extension, 'value':php_soap.dll}
       - {type: 'ini', multivalue: true, 'key':extension, 'value':php_xmlrpc.dll}
       - {type: 'ini', multivalue: true, 'key':extension, 'value':php_wincache.dll}
-      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_pdo_sqlsrv.dll}
       - {type: 'ini', multivalue: true, 'key':extension, 'value':php_igbinary.dll}
       - {type: 'ini', multivalue: true, 'key':extension, 'value':php_couchbase.dll}
       - {type: 'ini', multivalue: true, 'key':extension, 'value':php_com_dotnet.dll}
       - {type: 'ini', multivalue: true, 'key':extension, 'value':php_blackfire.dll}
+      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_pdo_mysql.dll}
       - {type: 'ini', multivalue: true, 'key':zend_extension, 'value':php_xdebug.dll}
       - {type: 'ini', multivalue: true, 'key':zend_extension, 'value':php_opcache.dll}
       - {type: 'ini', 'key':disable_functions, 'value':'passthru,show_source'}
- # SQLSERVER
-      - {type: 'ini', 'key':pdo_sqlsrv.client_buffer_max_kb_size, 'value':24480}
  # XDEBUG
       - {type: 'ini', 'key':'xdebug.remote_enable', 'value':'on'} 
       - {type: 'ini', 'key':'xdebug.remote_handler', 'value':'dbgp'} 
