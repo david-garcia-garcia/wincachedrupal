@@ -2,30 +2,29 @@
 
 namespace Drupal\wincachedrupal\Tests\Cache;
 
-use Drupal\wincachedrupal\Cache\WincacheBackendFactory;
-use Drupal\supercache\Cache\DummyTagChecksum;
+use Drupal\wincachedrupal\Cache\WincacheRawBackendFactory;
 
 /**
- * Tests WincacheBackendFactory.
+ * Tests WincacheRawBackend trit.
  *
  * @group wincachedrupal
  */
-trait BackendGeneralTestCaseTrait {
+trait RawBackendGeneralTestCaseTrait {
 
   /**
    * {@inheritdoc}
    */
   public function setUp() {
-    wincachedrupal_ucache_clear();
+    \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_clear();
     $app_root = '/';
     $site_path = uniqid();
-    $factory = new WincacheBackendFactory($app_root, $site_path, new DummyTagChecksum());
+    $factory = new WincacheRawBackendFactory($app_root, $site_path);
 
     // The aim of this setup is to get two functional backend instances.
     $this->backend = $factory->get('test_binary');
     $this->backend2 = $factory->get('test_binary_alt');
 
-    parent::setup();
+    parent::setUp();
   }
 
 }

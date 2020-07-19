@@ -1,0 +1,184 @@
+init:
+  - ps: ''
+services:
+  - mysql
+  - iis
+hosts:
+  www.mydrupalsite.com: 127.0.0.1
+image:
+  - Visual Studio 2019
+install:
+  - ps: |
+       echo "Running on cloud $Env:APPVEYOR_BUILD_WORKER_CLOUD";
+       echo "Running on image $Env:APPVEYOR_BUILD_WORKER_IMAGE";
+       $cpu = Get-WmiObject Win32_ComputerSystem | Select NumberOfProcessors, NumberOfLogicalProcessors, Name, Manufacturer, Model;
+       $clockSpeed = Get-WmiObject -Class Win32_Processor | Select CurrentClockSpeed;
+       $memoryGb = Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property capacity -Sum | Foreach {"{0:N2}" -f ([math]::round(($_.Sum / 1GB),2))};
+       echo "NumberOfLogicalProcessors: $($cpu.NumberOfLogicalProcessors)";
+       echo "NumberOfProcessors: $($cpu.NumberOfProcessors)";
+       echo "System Memory: $memoryGb";
+       echo "CPU clock speed: $($clockSpeed.CurrentClockSpeed)Hz";
+       echo "Computer Name: $($cpu.Name)";
+       echo "Manufacturer: $($cpu.Manufacturer)";
+       echo "Model: $($cpu.Model)";
+  - ps: $Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL = "$env:APPVEYOR_REPO_COMMIT_MESSAGE $env:APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED".TrimEnd();
+  - ps: |
+      If ($Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL -imatch 'rdpinstall') {
+        $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+      }
+  - ps: $Env:TestLogDir = "$Env:BuildDir\TestLogs";
+  - ps: $Env:TestLogDirClone = "$Env:BuildDir\TestLogsClone";
+  - cmd: mkdir %TestLogDir%
+  - cmd: mkdir %TestLogDirClone%
+  - ps: Start-Transcript -path "$Env:BuildDir\console.txt" -append
+  - ps: $Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL = "$env:APPVEYOR_REPO_COMMIT_MESSAGE $env:APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED".TrimEnd();
+  - ps: Start-Service 'MySQL57'
+  - ps: Start-Service W3SVC
+  - ps: choco install php -y --no-progress 2>&1 > "$Env:TestLogDir\choco_install_php.txt"
+  - ps: choco install urlrewrite -y --no-progress 2>&1 > "$Env:TestLogDir\choco_install_urlrewrite.txt"
+  - ps: choco install OpenSSL.Light -y --no-progress 2>&1 > "$Env:TestLogDir\choco_install_openssl.txt"
+  - ps: choco install sqlserver-odbcdriver -y --no-progress 2>&1 > "$Env:TestLogDir\choco_install_sqlserver-odbcdriver.txt"
+  - ps: choco install iis-arr -y --no-progress 2>&1 > "$Env:TestLogDir\choco_install_iis-arr.txt"
+  - ps: | 
+      $WorkingDir = Convert-Path .
+      $ZipPath = Join-Path $WorkingDir '\chef_cmdlet.zip'
+      (New-Object Net.WebClient).DownloadFile('https://ci.appveyor.com/api/projects/David19767/iischef/artifacts/iischef.cmdlet.zip?branch=1.x', $ZipPath)
+      $DESTINATION= Join-Path $env:ProgramFiles "\WindowsPowerShell\Modules\Chef"
+      New-Item -ItemType directory -Force -Path $DESTINATION
+      (new-object -com shell.application).namespace($DESTINATION).CopyHere((new-object -com shell.application).namespace($ZipPath).Items(),16)
+      Remove-Item $ZipPath
+  - ps: $Env:Path = "C:\Program Files\OpenSSL;" + $Env:Path;
+  - cmd: sc config wuauserv start= auto
+  - cmd: net start wuauserv
+  - ps: (New-Object Net.WebClient).DownloadFile('http://curl.haxx.se/ca/cacert.pem', 'C:\tools\php74\cacert.pem')
+  - ps: new-item c:\composer -itemtype directory
+  - ps: $Env:Path = "C:\tools\php74;" + $Env:Path;
+  - ps: $Env:Path = "C:\tools\php74;" + $Env:Path;
+  - ps: Add-Content C:\tools\php74\php.ini "extension_dir=ext `n"
+  - ps: Add-Content C:\tools\php74\php.ini "extension=php_openssl.dll `n"
+  - ps: Add-Content C:\tools\php74\php.ini "extension=php_mbstring.dll `n"
+  - ps: Add-Content C:\tools\php74\php.ini "extension=php_curl.dll `n"
+  - ps: Add-Content C:\tools\php74\php.ini "extension=php_gd2.dll `n"
+  - ps: Add-Content C:\tools\php74\php.ini "curl.cainfo=C:\tools\php74\cacert.pem `n"
+  - ps: Add-Content C:\tools\php74\php.ini "openssl.cafile=C:\tools\php74\cacert.pem `n"
+  - ps: Add-Content C:\tools\php74\php.ini "memory_limit=2048M `n"
+  - ps: php -i | Out-File "$Env:TestLogDir\php-i.txt"
+  - cmd: cd /d C:\composer
+  # RDPFINISH
+  - ps: |
+      If ($Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL -imatch 'rdpcomposer') {
+        $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+      }
+  - cmd: choco install composer -y --no-progress
+  - ps: Add-Content C:\ProgramData\ComposerSetup\bin\composer.bat ""
+  - ps: refreshenv
+  - cmd: SET PATH=C:\ProgramData\ComposerSetup\bin;%PATH%
+  - ps: |
+      If ($Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL -imatch 'rdpcomposer') {
+        $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+      }
+  - cmd: composer global require hirak/prestissimo
+  - cmd: cd /d c:\projects
+  - cmd: IF NOT EXIST C:\projects\drupal-project composer create-project -n drupal/recommended-project:8.9.2 drupal-project
+  - cmd: cd /d C:\projects\drupal-project
+  - cmd: composer config repositories.drupal composer https://packages.drupal.org/8
+  - cmd: composer require drupal/core-dev:8.9.2
+  - cmd: composer require drush/drush
+  - cmd: composer require drupal/wincachedrupal
+  - cmd: composer require drupal/console
+  # Replace the pulled module with the local files, only for this CI
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER% %cd%\web\modules\contrib\wincachedrupal
+  # Move the PHP_BIN needed to build the PHP environment
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\phpbin %cd%\phpbin
+  # Write to default.settings.php the low level wincache integration
+  - ps: |
+     $value = @'
+     if ($settings['hash_salt']) {
+       $prefix = 'drupal.' . hash('sha256', 'drupal.' . $settings['hash_salt']);
+       $loader = new \Symfony\Component\ClassLoader\WincacheClassLoader($prefix, $class_loader);
+       unset($prefix);
+       $class_loader->unregister();
+       $loader ->register();
+       $class_loader = $loader ;
+     }
+     $settings['file_cache']['default'] = [
+         'class' => '\Drupal\Component\FileCache\FileCache',
+         'cache_backend_class' => \Drupal\wincachedrupal\Cache\WincacheFileCacheBackend::class,
+         'cache_backend_configuration' => [],
+       ];
+     '@
+     Add-Content -Path "C:\projects\drupal-project\web\sites\default\default.settings.php" -Value $value
+  # Prepare the drupal command
+  - ps: |
+      $cwd = (Get-Location).Path;
+      "php $cwd\vendor\drupal\console\bin\drupal " + $([char]37) + "*" | Out-File $cwd/web/drupal.bat -Encoding ASCII
+  - cmd: cd /d C:\projects\drupal-project\web
+  - cmd: xcopy "%APPVEYOR_BUILD_FOLDER%\chef" "C:\projects\drupal-project\chef" /r /s /i
+  - ps: Invoke-ChefSelfInstall -Path "c:\chef"
+  - ps: Invoke-ChefAppDeployPath "C:\projects\drupal-project" drupal -Install
+  - ps: $site = Invoke-ChefAppGetDeployment drupal
+  - ps: $Env:DATABASENAME = $site.DeploymentActive.GetRuntimeSetting("services.default.database", "");
+  - ps: $Env:DATABASEPASSWORD = $site.DeploymentActive.GetRuntimeSetting("services.default.password", "");
+  - ps: $Env:DATABASEUSER = $site.DeploymentActive.GetRuntimeSetting("services.default.username", "");
+  - ps: $Env:DATABASEHOST = $site.DeploymentActive.GetRuntimeSetting("services.default.host", "");
+  - ps: $Env:SITERUNTIMEPATH = $site.DeploymentActive.runtimePath;
+  # Make the site's PHP environment the default PHP environment
+  - cmd: set path=%SITERUNTIMEPATH%\php;%path%
+  - ps: |
+      If ($Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL -imatch 'rdpbeforeinstall') {
+        $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+      }
+  - cmd: drupal about
+  - ps: |
+      If ($Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL -imatch 'rdpinstall') {
+        $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+      }
+  - cmd: drupal site:install standard --langcode="en" --db-type="mysql" --db-host="127.0.0.1" --db-name="mydrupalsite" --db-user="root" --db-pass="Password12!" --db-port="3306" --site-name="Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
+  - cmd: cd /d C:\projects\drupal-project
+  - ps: $Env:CWD = (Get-Location).path;
+  # - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/use_the_php_binary-2748883-15.patch',"$Env:CWD\patch.patch")
+  # - cmd: git apply patch.patch --directory=web
+  - cmd: cd /d C:\projects\drupal-project\web
+  - cmd: drupal module:install simpletest
+  - ps: wget "http://sqlsrv.drupal.org/"
+build_script:
+  - cmd: echo "No build"
+test_script:
+  - cmd: cd /d C:\projects\drupal-project
+  - cmd: mkdir %TestLogDir%\testresults\
+  # Register the test watcher
+  - ps: |
+      $watcher = New-Object System.IO.FileSystemWatcher;
+      $watcher.IncludeSubdirectories = $true;
+      $watcher.Path = "$Env:TestLogDir\testresults\";
+      $watcher.EnableRaisingEvents = $true;
+      $Env:testCount = 0;
+      $action =
+      {
+        $path = $event.SourceEventArgs.FullPath
+        $changetype = $event.SourceEventArgs.ChangeType
+        ([int]$Env:testCount)++;
+        $wc = New-Object 'System.Net.WebClient'
+        $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", $path);
+        Write-Host "Completed $Env:testCount tests";
+      }
+      Register-ObjectEvent $watcher 'Created' -Action $action
+  - ps: |
+      Start-Transcript "$Env:TestLogDir\tests.log"
+      $ErrorActionPreference = 'SilentlyContinue'
+      php web/core/scripts/run-tests.sh --php php --url "http://sqlsrv.drupal.org/" --non-html --xml "$Env:TestLogDir\testresults\" wincachedrupal
+      Stop-Transcript
+  # After tests, try istalling all core modules\contrib\sqlsrv  - cmd: drupal module:install simpletest
+on_finish:
+  - ps: echo "on_finish start";
+  - cmd: echo Build Version %APPVEYOR_BUILD_VERSION%
+  # Add the chocolatey logs
+  - cmd: mkdir %TestLogDir%\ChocolateyLogs
+  - cmd: xcopy C:\ProgramData\chocolatey\logs %TestLogDir%\ChocolateyLogs /e /q & exit 0
+  # Add the npm-cache logs
+  - cmd: mkdir %TestLogDir%\npm-cache-logs
+  - cmd: xcopy %APPDATA%\npm-cache\_logs %TestLogDir%\npm-cache-logs /s /q & exit 0
+  # Zip and push test logs
+  - cmd: xcopy %TestLogDir% %TestLogDirClone% /q /s /e & exit 0
+  - cmd: 7z a -p"%APPVEYOR_BUILD_VERSION%" -r %BuildDir%\TestLogs.zip %TestLogDirClone%\* > null
+  - ps: Push-AppveyorArtifact "$Env:BuildDir\TestLogs.zip" -FileName "TestLogs.zip"

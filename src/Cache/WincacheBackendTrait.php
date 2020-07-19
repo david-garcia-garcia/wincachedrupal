@@ -50,10 +50,10 @@ trait WincacheBackendTrait {
    */
   protected function wincacheSet($cid, $data, $expire = CacheBackendInterface::CACHE_PERMANENT) {
     if ($ttl = $this->getTtl($expire)) {
-      return wincachedrupal_ucache_set($cid, $data, $ttl);
+      return \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_set($cid, $data, $ttl);
     }
     else {
-      return wincachedrupal_ucache_set($cid, $data);
+      return \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_set($cid, $data);
     }
   }
 
@@ -73,10 +73,10 @@ trait WincacheBackendTrait {
       /* Prevent Drupal from logging any exceptions or warning thrown here */
     }, E_ALL);
     if ($ttl = $this->getTtl($expire)) {
-      $result = wincachedrupal_ucache_add($cid, $data, $ttl);
+      $result = \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_add($cid, $data, $ttl);
     }
     else {
-      $result = wincachedrupal_ucache_add($cid, $data);
+      $result = \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_add($cid, $data);
     }
     restore_error_handler();
     return $result;
@@ -116,7 +116,7 @@ trait WincacheBackendTrait {
    *   The matching keys.
    */
   public function getAllKeysWithPrefix($prefix) {
-    $data = wincachedrupal_ucache_info();
+    $data = \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_info();
     $k = array_column($data['ucache_entries'], 'key_name');
     $keys = preg_grep("/^$prefix/", $k);
     $keys = preg_replace("/^$prefix/", '', $keys);

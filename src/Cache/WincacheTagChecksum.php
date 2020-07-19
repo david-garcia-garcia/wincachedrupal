@@ -44,10 +44,10 @@ class WincacheTagChecksum implements CacheTagsChecksumInterface, CacheTagsInvali
       if (isset($this->invalidatedTags[$tag])) {
         continue;
       }
-      $success = wincachedrupal_ucache_inc('cache_tag::' . $tag, 1);
+      $success = \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_inc('cache_tag::' . $tag, 1);
       // Increment does not work if the item does not exist already.
       if ($success === FALSE) {
-        wincachedrupal_ucache_set('cache_tag::' . $tag, 1);
+          \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_set('cache_tag::' . $tag, 1);
       }
       $this->invalidatedTags[$tag] = TRUE;
       unset($this->tagCache[$tag]);
@@ -89,7 +89,7 @@ class WincacheTagChecksum implements CacheTagsChecksumInterface, CacheTagsInvali
 
     if ($missing_tags) {
       $keys = preg_filter('/^/', 'cache_tag::', $tags);
-      $stored_tags = wincachedrupal_ucache_get($keys);
+      $stored_tags = \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_get($keys);
       $this->tagCache += $stored_tags;
       // Fill static cache with empty objects for tags not found in the
       // database.

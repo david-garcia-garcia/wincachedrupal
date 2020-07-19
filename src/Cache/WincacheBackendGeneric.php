@@ -5,8 +5,6 @@ namespace Drupal\wincachedrupal\Cache;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\supercache\Cache\RequestTimeTrait;
 
-require_once __DIR__ . '/../../wincache.inc';
-
 /**
  * Abstact class to be inherited.
  */
@@ -60,10 +58,10 @@ abstract class WincacheBackendGeneric {
    */
   protected function wincacheSet($cid, $data, $expire = CacheBackendInterface::CACHE_PERMANENT) {
     if ($ttl = $this->getTtl($expire)) {
-      return wincachedrupal_ucache_set($cid, $data, $ttl);
+      return \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_set($cid, $data, $ttl);
     }
     else {
-      return wincachedrupal_ucache_set($cid, $data);
+      return \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_set($cid, $data);
     }
   }
 
@@ -83,10 +81,10 @@ abstract class WincacheBackendGeneric {
       /* Prevent Drupal from logging any exceptions or warning thrown here */
     }, E_ALL);
     if ($ttl = $this->getTtl($expire)) {
-      $result = wincachedrupal_ucache_add($cid, $data, $ttl);
+      $result = \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_add($cid, $data, $ttl);
     }
     else {
-      $result = wincachedrupal_ucache_add($cid, $data);
+      $result = \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_add($cid, $data);
     }
     restore_error_handler();
     return $result;
@@ -138,7 +136,7 @@ abstract class WincacheBackendGeneric {
     foreach ($prefixes as $prefix) {
       $parts[] = "^$prefix";
     }
-    $data = wincachedrupal_ucache_info();
+    $data = \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_info();
     $k = array_column($data['ucache_entries'], 'key_name');
     $regex = '/' . implode('|', $parts) . '/';
     $keys = preg_grep($regex, $k);
@@ -197,9 +195,9 @@ abstract class WincacheBackendGeneric {
   protected function getBinName() {
     $key = $this->sitePrefix . ":" . self::INVALIDATIONCOUNT . ':' . $this->realBin;
     $success = FALSE;
-    $cache = wincachedrupal_ucache_get($key, $success);
+    $cache = \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_get($key, $success);
     if ($success == FALSE) {
-      wincachedrupal_ucache_set($key, 0);
+        \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_set($key, 0);
       $cache = 0;
     }
     return $this->realBin . $cache;
@@ -214,8 +212,8 @@ abstract class WincacheBackendGeneric {
     // This call MUST succeed because the value
     // is populated when calliing getBinName the
     // first time.
-    $inv = wincachedrupal_ucache_inc($invalidationcountkey, 1);
-    $invalidations = wincachedrupal_ucache_get($invalidationskey);
+    $inv = \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_inc($invalidationcountkey, 1);
+    $invalidations = \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_get($invalidationskey);
     if (empty($invalidations)) {
       $invalidations = [];
       if ($inv > 1) {
@@ -241,12 +239,12 @@ abstract class WincacheBackendGeneric {
     // at once because the heavy part is the call to wincache_ucache_get
     // which can be very memory intensive.
     $invalidationskey = $this->sitePrefix . ":" . self::INVALIDATIONS;
-    $invalidations = wincachedrupal_ucache_get($invalidationskey);
+    $invalidations = \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_get($invalidationskey);
     if (!empty($invalidations)) {
       // Invalidations contains an array of prefixes
       // used for this binary.
-      wincachedrupal_ucache_delete($this->getAllKeysWithPrefix($invalidations, FALSE));
-      wincachedrupal_ucache_set($invalidationskey, []);
+        \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_delete($this->getAllKeysWithPrefix($invalidations, FALSE));
+        \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_set($invalidationskey, []);
     }
   }
 
