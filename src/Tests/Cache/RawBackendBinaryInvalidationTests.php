@@ -3,15 +3,15 @@
 namespace Drupal\wincachedrupal\Tests\Cache;
 
 use Drupal\KernelTests\KernelTestBase;
-
 use Drupal\wincachedrupal\Cache\WincacheRawBackendFactory;
 
 /**
  * Testea funciones basicas.
  *
- * @group wincachedrupal
+ * @group wincachedrupal_supercache
  */
-class RawBackendBinaryInvalidationTests extends KernelTestBase {
+class RawBackendBinaryInvalidationTests extends KernelTestBase
+{
 
   /**
    * {@inheritdoc}
@@ -24,7 +24,8 @@ class RawBackendBinaryInvalidationTests extends KernelTestBase {
   /**
    * Make sure that invalidations and garbage collection works fine.
    */
-  public function testInvalidations() {
+  public function testInvalidations()
+  {
 
     $data1 = [
       'a' => ['data' => 'b'],

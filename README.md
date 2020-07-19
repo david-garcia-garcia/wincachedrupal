@@ -12,14 +12,6 @@ PHP on Windows is not production ready without the use of Wincache. When
 enabled, Wincache alters some low level PHP behaviour - such as file system
 manipulation functions - so that it performs properly on windows.
 
-
-REQUIREMENTS
-------------
-This module requires the following modules:
-
- * Supercache (https://www.drupal.org/project/supercache)
-
-
 INSTALLATION
 ------------
 

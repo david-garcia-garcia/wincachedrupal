@@ -3,29 +3,29 @@
 namespace Drupal\wincachedrupal\Tests\Cache;
 
 use Drupal\KernelTests\KernelTestBase;
-
+use Drupal\wincachedrupal\Cache\DummyTagChecksum;
 use Drupal\wincachedrupal\Cache\WincacheBackendFactory;
-use Drupal\supercache\Cache\DummyTagChecksum;
 
 /**
  * Testea funciones basicas.
  *
  * @group wincachedrupal
  */
-class BackendBinaryInvalidationTests extends KernelTestBase {
+class BackendBinaryInvalidationTests extends KernelTestBase
+{
 
   /**
    * {@inheritdoc}
    */
   public static $modules = [
-    'supercache',
     'wincachedrupal',
   ];
 
   /**
    * Make sure that invalidations and garbage collection works fine.
    */
-  public function testInvalidations() {
+  public function testInvalidations()
+  {
 
     $data1 = [
       'a' => ['data' => 'b'],

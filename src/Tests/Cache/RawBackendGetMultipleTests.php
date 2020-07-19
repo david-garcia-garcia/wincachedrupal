@@ -7,7 +7,7 @@ use Drupal\supercache\Tests\Generic\Cache\BackendGetMultipleTests as GetMultiple
 /**
  * Extends supercache BackendGetMultipleTests.
  *
- * @group wincachedrupal
+ * @group wincachedrupal_supercache
  */
 class RawBackendGetMultipleTests extends GetMultipleTests {
   use RawBackendGeneralTestCaseTrait;
