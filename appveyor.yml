@@ -121,6 +121,10 @@ install:
   - ps: $Env:SITERUNTIMEPATH = $site.DeploymentActive.runtimePath;
   # Make the site's PHP environment the default PHP environment
   - cmd: set path=%SITERUNTIMEPATH%\php;%path%
+  - ps: |
+      If ($Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL -imatch 'rdpbeforeinstall') {
+        $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+      }
   - cmd: drupal about
   - ps: |
       If ($Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL -imatch 'rdpinstall') {
