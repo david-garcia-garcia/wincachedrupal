@@ -1,4 +1,3 @@
-skip_tags: true
 init:
   - ps: ''
 services:
