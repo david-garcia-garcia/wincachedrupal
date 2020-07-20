@@ -22,13 +22,17 @@ work you need to rebuild your drupal dependencies:
 
 `composer require drupal/wincachedrupal`
 
+## DEPENDENCIES
+
+This module depends on classes provided by the Superache module, but does not require the supercache module itself to be enabled.
+
 
 CONFIGURATION
 -------------
 
 Download the Wincache PHP extension:
 
- http://windows.php.net/downloads/pecl/releases/
+http://windows.php.net/downloads/pecl/releases/
 
 Enable it in your PHP.ini and configure it:
 ```
@@ -94,11 +98,11 @@ To enable this integration:
 - Enable the com_dotnet extension in your php.ini (extension=com_dotnet)
 - Register the NetPhp runtime component
  - Download the NetPhp binaries from
-  [here](http://www.drupalonwindows.com/sites/default/files/netphp2_0_0_4.zip)
+    [here](http://www.drupalonwindows.com/sites/default/files/netphp2_0_0_4.zip)
  - Rename the netutilities_clr4.dll file to netutilities.dll
  - Register the component running the command:
  "C:\Windows\Microsoft.NET\Framework\v4.0.30319\regasm.exe" netutilities.dll
-  /codebase
+    /codebase
 - Copy the AjaxMin.dll to /libraries/_bin/ajaxmin. You can download it from
 here: http://ajaxmin.codeplex.com/
 

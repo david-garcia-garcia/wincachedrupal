@@ -161,13 +161,20 @@ test_script:
         $wc = New-Object 'System.Net.WebClient'
         $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", $path);
         Write-Host "Completed $Env:testCount tests";
+        if ([bool]((Get-Content -Path $path) -like '*test runner returned a non-zero error code*')) {
+          $Env:Failed = true;
+        }
       }
       Register-ObjectEvent $watcher 'Created' -Action $action
   - ps: |
       Start-Transcript "$Env:TestLogDir\tests.log"
       $ErrorActionPreference = 'SilentlyContinue'
       php web/core/scripts/run-tests.sh --php php --url "http://sqlsrv.drupal.org/" --non-html --xml "$Env:TestLogDir\testresults\" wincachedrupal
+      php web/core/scripts/run-tests.sh --php php --url "http://sqlsrv.drupal.org/" --non-html --xml "$Env:TestLogDir\testresults\" wincachedrupal_supercache
       Stop-Transcript
+      if ($Env:Failed == true) {
+        Throw "Failed tests";
+      }
   # After tests, try istalling all core modules\contrib\sqlsrv  - cmd: drupal module:install simpletest
 on_finish:
   - ps: echo "on_finish start";
