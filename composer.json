@@ -1,24 +1,22 @@
 {
-  "name": "drupal/wincachedrupal",
-  "description": "Drupal wincache integration",
-  "type": "drupal-module",
-  "minimum-stability": "stable",
-  "require": {
-    "drupalonwindows/netphp": "2.x-dev",
-    "drupal/core" : "^8.8",
-    "php" : "^7.1"
-  },
-  "autoload": {
-    "psr-4": {
-      "Drupal\\wincachedrupal\\": "src/"
+    "name": "drupal/wincachedrupal",
+    "description": "Drupal wincache integration",
+    "type": "drupal-module",
+    "minimum-stability": "stable",
+    "require": {
+        "drupalonwindows/netphp": "2.x-dev",
+        "drupal/core": "^8.8",
+        "drupal/supercache": "8.x-dev",
+        "php": "^7.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Drupal\\wincachedrupal\\": "src/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7",
+        "phpstan/phpstan": "*",
+        "php-coveralls/php-coveralls": "*"
     }
-  },
-  "autoload-dev": {
-    "psr-4": { "Drupal\\wincachedrupal\\Tests\\": "tests/src/" }
-  },
-  "require-dev": {
-    "phpunit/phpunit": "^7",
-    "phpstan/phpstan": "*",
-    "php-coveralls/php-coveralls": "*"
-  }
 }

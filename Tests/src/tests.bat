@@ -1,1 +1,0 @@
-php ../../../../core/scripts/run-tests.sh --php "php" wincachedrupal

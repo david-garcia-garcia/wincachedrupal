@@ -3,28 +3,29 @@
 namespace Drupal\wincachedrupal\Tests\Cache;
 
 use Drupal\KernelTests\KernelTestBase;
-
-use Drupal\wincachedrupal\Cache\WincacheRawBackendFactory;
+use Drupal\wincachedrupal\Cache\DummyTagChecksum;
+use Drupal\wincachedrupal\Cache\WincacheBackendFactory;
 
 /**
  * Testea funciones basicas.
  *
  * @group wincachedrupal
  */
-class RawBackendBinaryInvalidationTests extends KernelTestBase {
+class BackendBinaryInvalidationTests extends KernelTestBase
+{
 
   /**
    * {@inheritdoc}
    */
   public static $modules = [
-    'supercache',
-    'wincachedrupal',
+    'wincachedrupal'
   ];
 
   /**
    * Make sure that invalidations and garbage collection works fine.
    */
-  public function testInvalidations() {
+  public function testInvalidations()
+  {
 
     $data1 = [
       'a' => ['data' => 'b'],
@@ -42,7 +43,7 @@ class RawBackendBinaryInvalidationTests extends KernelTestBase {
       'e' => ['data' => 'b2'],
     ];
 
-    $factory = new WincacheRawBackendFactory('', '');
+    $factory = new WincacheBackendFactory('', '', new DummyTagChecksum());
 
     $backend = $factory->get('bootstrap');
 
@@ -51,6 +52,7 @@ class RawBackendBinaryInvalidationTests extends KernelTestBase {
     $backend->deleteAll();
     $backend->setMultiple($data1);
 
+    // Wincache won't return detailed of stored keys: reported here: https://forums.iis.net/p/1249312/2161546.aspx?p=True&t=637307565571675358
     $this->assertEquals(count($data1), count($backend->getAll()));
     $firstPrefix = $backend->getBinKey('');
     $this->assertEquals(count($data1), count($backend->getAllKeysWithPrefix($firstPrefix)), 'Correct number of items returned.');

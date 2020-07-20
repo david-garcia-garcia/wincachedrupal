@@ -7,8 +7,8 @@ use Drupal\supercache\Cache\CacheRawBackendInterface;
 /**
  * Stores cache items in Wincache.
  */
-class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBackendInterface {
-
+class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBackendInterface
+{
   /**
    * Constructs a new WincacheRawBackend instance.
    *
@@ -17,14 +17,16 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
    * @param string $site_prefix
    *   The prefix to use for all keys in the storage that belong to this site.
    */
-  public function __construct($bin, $site_prefix) {
+  public function __construct($bin, $site_prefix)
+  {
     parent::__construct('rawcache_' . $bin, $site_prefix);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function get($cid) {
+  public function get($cid)
+  {
     $success = FALSE;
     $data = \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_get($this->getBinKey($cid), $success);
     if (!$success) {
@@ -36,7 +38,8 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
   /**
    * {@inheritdoc}
    */
-  public function getMultiple(&$cids) {
+  public function getMultiple(&$cids)
+  {
     // Translate the requested cache item IDs to APCu keys.
     $map = [];
     foreach ($cids as $cid) {
@@ -73,7 +76,8 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
    * @return string[]
    *   An array containing matched items.
    */
-  public function getAll($prefix = '') {
+  public function getAll($prefix = '')
+  {
     $keys = $this->getAllKeys($prefix);
     $result = $this->getMultiple($keys);
     return $result;
@@ -88,7 +92,8 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
    * @return array
    *   An array containing matched keys.
    */
-  public function getAllKeys($prefix = '') {
+  public function getAllKeys($prefix = '')
+  {
     $key = $this->getBinKey($prefix);
     return $this->getAllKeysWithPrefix($key);
   }
@@ -106,21 +111,24 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
    * @return object
    *   The cache item as a Drupal cache object.
    */
-  protected function prepareItem($cid, $data) {
-    return (object) ['data' => $data, 'cid' => $cid];
+  protected function prepareItem($cid, $data)
+  {
+    return (object)['data' => $data, 'cid' => $cid];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function set($cid, $data, $expire = CacheRawBackendInterface::CACHE_PERMANENT) {
+  public function set($cid, $data, $expire = CacheRawBackendInterface::CACHE_PERMANENT)
+  {
     $this->wincacheSet($this->getBinKey($cid), $data, $expire);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setMultiple(array $items = []) {
+  public function setMultiple(array $items = [])
+  {
     foreach ($items as $cid => $item) {
       $this->set($cid, $item['data'], isset($item['expire']) ? $item['expire'] : CacheRawBackendInterface::CACHE_PERMANENT);
     }
@@ -129,45 +137,58 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
   /**
    * {@inheritdoc}
    */
-  public function delete($cid) {
-      \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_delete($this->getBinKey($cid));
+  public function delete($cid)
+  {
+    \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_delete($this->getBinKey($cid));
   }
 
   /**
    * {@inheritdoc}
    */
-  public function deleteMultiple(array $cids) {
-      \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_delete(array_map([$this, 'getBinKey'], $cids));
+  public function deleteMultiple(array $cids)
+  {
+    \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_delete(array_map([$this, 'getBinKey'], $cids));
   }
 
   /**
    * {@inheritdoc}
    */
-  public function garbageCollection() {
+  public function garbageCollection()
+  {
     parent::garbageCollectInvalidations();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function removeBin() {
+  public function removeBin()
+  {
     parent::invalidateBinary();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function deleteAll() {
+  public function deleteAll()
+  {
     parent::invalidateBinary();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function counter($cid, $increment, $default = 0) {
+  public function counter($cid, $increment, $default = 0)
+  {
     $success = FALSE;
     $key = $this->getBinKey($cid);
+    try {
       \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_inc($key, $increment, $success);
+    } catch (\Throwable $error) {
+      // This is just a warning of a special case: wincache_ucache_inc(): function can only be called for key whose value is long
+      if ($error->getCode() !== 2) {
+        throw $error;
+      }
+    }
     if (!$success) {
       $this->wincacheSet($key, $default);
     }
@@ -176,7 +197,8 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
   /**
    * {@inheritdoc}
    */
-  public function counterMultiple(array $cids, $increment, $default = 0) {
+  public function counterMultiple(array $cids, $increment, $default = 0)
+  {
     foreach ($cids as $cid) {
       $this->counter($cid, $increment, $default);
     }
@@ -185,25 +207,28 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
   /**
    * {@inheritdoc}
    */
-  public function counterSet($cid, $value) {
-    $this->set($cid, (int) $value);
+  public function counterSet($cid, $value)
+  {
+    $this->set($cid, (int)$value);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function counterSetMultiple(array $items) {
+  public function counterSetMultiple(array $items)
+  {
     foreach ($items as $cid => $item) {
-      $this->counterSet($cid, (int) $item);
+      $this->counterSet($cid, (int)$item);
     }
   }
 
   /**
    * {@inheritdoc}
    */
-  public function counterGet($cid) {
+  public function counterGet($cid)
+  {
     if ($result = $this->get($cid)) {
-      return (int) $result->data;
+      return (int)$result->data;
     }
     return FALSE;
   }
@@ -211,11 +236,12 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
   /**
    * {@inheritdoc}
    */
-  public function counterGetMultiple(array &$cids) {
+  public function counterGetMultiple(array &$cids)
+  {
     $results = $this->getMultiple($cids);
     $counters = [];
     foreach ($results as $cid => $item) {
-      $counters[$cid] = (int) $item->data;
+      $counters[$cid] = (int)$item->data;
     }
     return $counters;
   }

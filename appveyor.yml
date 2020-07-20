@@ -84,7 +84,7 @@ install:
   - cmd: composer config repositories.drupal composer https://packages.drupal.org/8
   - cmd: composer require drupal/core-dev:8.9.2
   - cmd: composer require drush/drush
-  - cmd: composer require drupal/wincachedrupal
+  - cmd: composer require drupal/wincachedrupal:8.0.x-dev
   - cmd: composer require drupal/console
   # Replace the pulled module with the local files, only for this CI
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER% %cd%\web\modules\contrib\wincachedrupal
@@ -161,13 +161,20 @@ test_script:
         $wc = New-Object 'System.Net.WebClient'
         $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", $path);
         Write-Host "Completed $Env:testCount tests";
+        if ([bool]((Get-Content -Path $path) -like '*test runner returned a non-zero error code*')) {
+          $Env:Failed = 'true';
+        }
       }
       Register-ObjectEvent $watcher 'Created' -Action $action
   - ps: |
       Start-Transcript "$Env:TestLogDir\tests.log"
       $ErrorActionPreference = 'SilentlyContinue'
       php web/core/scripts/run-tests.sh --php php --url "http://sqlsrv.drupal.org/" --non-html --xml "$Env:TestLogDir\testresults\" wincachedrupal
+      php web/core/scripts/run-tests.sh --php php --url "http://sqlsrv.drupal.org/" --non-html --xml "$Env:TestLogDir\testresults\" wincachedrupal_supercache
       Stop-Transcript
+      if ($Env:Failed -eq 'true') {
+        Throw "Failed tests";
+      }
   # After tests, try istalling all core modules\contrib\sqlsrv  - cmd: drupal module:install simpletest
 on_finish:
   - ps: echo "on_finish start";

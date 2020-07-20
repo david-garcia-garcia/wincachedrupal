@@ -9,24 +9,24 @@ use Drupal\KernelTests\KernelTestBase;
  *
  * @group wincachedrupal
  */
-class MiscelaneaTests extends KernelTestBase {
+class MiscelaneaTests extends KernelTestBase
+{
 
   /**
    * {@inheritdoc}
    */
   public static $modules = [
-    'supercache',
     'wincachedrupal',
   ];
 
   /**
    * Implements serialization.
    */
-  protected function doSerialize($use_json, $data) {
+  protected function doSerialize($use_json, $data)
+  {
     if ($use_json) {
       return json_encode($data);
-    }
-    else {
+    } else {
       return serialize($data);
     }
   }
@@ -40,7 +40,8 @@ class MiscelaneaTests extends KernelTestBase {
    * The test does not seem to make much sense,
    * except for that it did when the bug was there.
    */
-  public function testBugInWincacheExtension() {
+  public function testBugInWincacheExtension()
+  {
 
     // If you use use_wincache = TRUE the script will behave unexpectedly.
     // Use FALSE to make the script work like a charm.
@@ -86,7 +87,8 @@ class MiscelaneaTests extends KernelTestBase {
    *
    * @see https://forums.iis.net/t/1229315.aspx?Final+version+of+WinCache+2+0+for+PHP+7+0+0
    */
-  public function testBugInWincache2() {
+  public function testBugInWincache2()
+  {
 
     $frag1 = ['green' => 13, 'black' => 14];
     $bar1 = ['green' => 5, 'Blue' => '6', 'yellow', 'cyan' => 'eight'];

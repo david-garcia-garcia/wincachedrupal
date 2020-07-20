@@ -7,7 +7,7 @@ use Drupal\supercache\Tests\Generic\Cache\BackendSavingTests as ScBackendSavingT
 /**
  * Extends supercache BackendSavingTests.
  *
- * @group wincachedrupal
+ * @group wincachedrupal_supercache
  */
 class RawBackendSavingTests extends ScBackendSavingTests {
   use RawBackendGeneralTestCaseTrait;
