@@ -181,7 +181,14 @@ class WincacheRawBackend extends WincacheBackendGeneric implements CacheRawBacke
   {
     $success = FALSE;
     $key = $this->getBinKey($cid);
-    \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_inc($key, $increment, $success);
+    try {
+      \Drupal\wincachedrupal\WincacheWrapper::wincachedrupal_ucache_inc($key, $increment, $success);
+    } catch (\Throwable $error) {
+      // This is just a warning of a special case: wincache_ucache_inc(): function can only be called for key whose value is long
+      if ($error->getCode() !== 2) {
+        throw $error;
+      }
+    }
     if (!$success) {
       $this->wincacheSet($key, $default);
     }
